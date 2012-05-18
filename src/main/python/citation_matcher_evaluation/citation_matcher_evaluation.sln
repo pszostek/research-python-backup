@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "bib_creator", "bib_creator\bib_creator.pyproj", "{086523A2-E9C3-43D8-9A0A-BACBBC110D62}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "bbl_converter", "bbl_converter\bbl_converter.pyproj", "{42AE9ECD-5047-4BD0-B7DE-26DC5DE0CC85}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "nlm_modifier", "nlm_modifier\nlm_modifier.pyproj", "{829E3CC0-7ABE-4925-B55F-5782573261F6}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "evaluator", "evaluator\evaluator.pyproj", "{E9895096-4DDE-4ADC-AC07-03BFBA127696}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{086523A2-E9C3-43D8-9A0A-BACBBC110D62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{086523A2-E9C3-43D8-9A0A-BACBBC110D62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42AE9ECD-5047-4BD0-B7DE-26DC5DE0CC85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42AE9ECD-5047-4BD0-B7DE-26DC5DE0CC85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{829E3CC0-7ABE-4925-B55F-5782573261F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{829E3CC0-7ABE-4925-B55F-5782573261F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9895096-4DDE-4ADC-AC07-03BFBA127696}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9895096-4DDE-4ADC-AC07-03BFBA127696}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
