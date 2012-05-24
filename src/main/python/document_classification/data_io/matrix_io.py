@@ -1,6 +1,7 @@
 """IO for matrices, vectors, clusters' descriptors and others used for data exchange."""
 import logging
-
+import os,sys
+from itertools import izip
 
 def __read_tabs__(f):
     rowsStr = f.readline().replace('\n', '')
@@ -18,9 +19,8 @@ def __read_itabs__(f):
     return __read_ftabs__(f, cast_method=int)
 
 def __write_tabs__(f, lst):
-    for e in lst:
-        f.write(str(e)+"\t")
-    f.write("\n")
+    row_text = reduce(lambda e1,e2: e1+"\t"+e2, (str(e) for e in lst) )    
+    f.write(row_text+"\n")    
 
 def fread_smatrix(path, datareader=__read_ftabs__, rowlength=lambda rowno,numcols: 100000, maxrows=100000000):
     """Reads from file similarity matrix data."""
@@ -45,8 +45,6 @@ def fread_smatrix_data(path, datareader=__read_ftabs__):
     """Reads from file similarity matrix data."""
     (rows, cols, data) = fread_smatrix(path, datareader)
     return data
-
-
 
 def fread_smatrix_labels(path):
     """Reads from file similarity matrix rows' & columns' names."""
@@ -128,3 +126,81 @@ def serialize_matrix(matrix):
     for row in matrix:
         lst.extend(row)
     return lst 
+
+def extract_matrix_labels_file(fin, fout, argv):
+    """From fin reads matrix and to fout prints rows' names."""
+    labels = __read_tabs__(fin)
+    for label in labels:
+        fout.write(str(label))
+        fout.write("\n")
+    
+def keep_submatrix_ids_file(fin, fout, argv):
+    try:
+        ids_path = argv[0] 
+    except:
+        print "Argument expected: path to a file with list of ids"
+        sys.exit(-1)
+        
+    ids = set( line.strip() for line in open(ids_path).xreadlines() if len(line.strip())>0 )
+    print "",len(ids),"ids loaded =",str(ids)[:100]
+    
+    rows = __read_tabs__(fin)    
+    cols = __read_tabs__(fin)    
+    __write_tabs__(fout, (row for row in rows if row in ids))
+    __write_tabs__(fout, (col for col in cols if col in ids))
+    
+    col_ixs = list(ix for ix,col in enumerate(cols) if col in ids)        
+    for row in rows:
+        row_data = __read_tabs__(fin)
+        if not row in ids: continue
+        __write_tabs__(fout, (row_data[ix] for ix in col_ixs) )
+    
+def test_simmatrix_file(fin, fout, argv):    
+    rows = __read_tabs__(fin)    
+    cols = __read_tabs__(fin)    
+    
+    if len(rows)!=len(cols):
+        print "Similarity matrix must be squared!"
+        return 
+    for row,col in izip(rows,cols):
+        if row!=col:
+            print "Row and col names must agree!"
+            return
+                
+    for rowno,row in enumerate(rows):
+        row_data = __read_ftabs__(fin)
+        for colno,e in enumerate(row_data):
+            if e<0.0 or e>1.0:
+                print "Incorrect value=",e," in row=",rowno,"colno=",colno
+        
+    print "Validation done."
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
+    
+    fin = sys.stdin
+    fout = sys.stdout
+    sys.stdout = sys.stderr
+    
+    print "The program reads from stdin, processes matrix according to command, and prints out to stdout."
+    
+    subroutines = {}    
+    subroutines["-labels"] = ("Extract rows (=labels) from matrix", extract_matrix_labels_file)
+    subroutines["-filterids"] = ("[file-with-node-id-in-every-line] keeps submatrix with nodes of ids from list (file)", keep_submatrix_ids_file)
+    subroutines["-simvalid"] = ("validates similarity matrix",test_simmatrix_file)
+
+    try:
+        cmd = sys.argv[1]
+        print "Cmd =", cmd
+        routine = subroutines[cmd][1]
+        print "Subroutine =",routine         
+    except:
+        print "At least one argument expected: command"
+        print "Supported commands:"
+        for cmd,(desc,func) in subroutines.iteritems():
+            print cmd,desc
+        sys.exit(-1)
+    
+    routine(fin, fout, sys.argv[2:])

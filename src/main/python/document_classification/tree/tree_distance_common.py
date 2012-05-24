@@ -47,6 +47,7 @@ def pairwise_aggregation(A,B, tau = lambda a,b: a*b):
     
 #####################################################################################
 
+
 def calc_common_levels(path1, path2):
     """Returns number of common levels in paths (lists of clusters)."""
     common_levels = 0

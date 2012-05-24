@@ -210,6 +210,21 @@ def filter_records(fin, fout, bad_ids_file):
         fout.write("\n")
     return skipped_ids
 
+def keep_records_ids(fin, fout, keep_ids_file):
+    """Copies records from fin to fout. Keeps only those records of ids contained in file keep_ids_file (path).
+    
+    Returns list of kept ids."""
+    filter_ids = set(line.strip() for line in open(keep_ids_file).xreadlines())
+    print len(filter_ids)," on the 'keep-ids' list"
+    kept_ids = set()        
+    for record in zbl_io.read_zbl_records(fin):
+        if not record[zbl_io.ZBL_ID_FIELD] in filter_ids: continue
+        kept_ids.add(record[zbl_io.ZBL_ID_FIELD])
+        zbl_io.write_zbl_record(fout, record)
+        fout.write("\n")
+    return kept_ids
+
+
 def fix_id(id):
     """Fixes formatting of ZBL-ID (currently it is just removing prefix 'pre')."""
     if id.startswith("pre"):
@@ -268,6 +283,7 @@ EXTRACT_FIELD_CMD_NAME = '-field'
 EXTRACT_FIELDVAL_CMD_NAME = '-fieldval'
 
 FILTER_ID_CMD_NAME = '-filterids' 
+KEEP_ID_CMD_NAME = '-keepids'
 FILTER_ID_DUPLICATES_CMD_NAME = '-idduplicates'
 APPEND_FILE_CMD_NAME = '-appendfile'
 CPY_FILE_CMD_NAME = '-copy'
@@ -347,6 +363,8 @@ if __name__ == "__main__":
                 separator = ' '
         elif cmd == FILTER_ID_CMD_NAME:
             bad_ids_file = sys.argv[4]         
+        elif cmd == KEEP_ID_CMD_NAME:
+            keep_ids_file = sys.argv[4]         
         elif cmd == APPEND_FILE_CMD_NAME:
             append_file_path = sys.argv[4] 
         elif cmd == EXTRACT_FIELD_CMD_NAME or cmd == EXTRACT_FIELDVAL_CMD_NAME:
@@ -526,6 +544,7 @@ if __name__ == "__main__":
         print EXTRACT_FIELDVAL_CMD_NAME, '[field-name] - extracts value of field of field-name from records'
 
         print FILTER_ID_CMD_NAME, "[id-list-file] - removes records of id contained in id-list-file (single id per line)"
+        print KEEP_ID_CMD_NAME, "[id-list-file] - keeps records of id contained in id-list-file (single id per line)"
         print FILTER_ID_DUPLICATES_CMD_NAME, " - removes records with id duplicated"    
         print APPEND_FILE_CMD_NAME, "[append-file-path] - appends append-file-path file to source file"
         print CPY_FILE_CMD_NAME, " - copies file from source to destination"
@@ -577,6 +596,9 @@ if __name__ == "__main__":
             skipped_ids = filter_records(fin, fout, bad_ids_file)
             print "Skipped ids:", skipped_ids
             print "Total:", len(skipped_ids)
+        elif cmd == KEEP_ID_CMD_NAME:
+            kept_ids = keep_records_ids(fin, fout, keep_ids_file)
+            print "Total kept:", len(kept_ids)
         elif cmd == FILTER_ID_DUPLICATES_CMD_NAME:
             duplicated_ids = filter_duplicates(fin, fout)        
             print "Duplicated ids:", duplicated_ids

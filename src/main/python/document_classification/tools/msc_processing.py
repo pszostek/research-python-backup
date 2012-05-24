@@ -9,6 +9,7 @@ from data_io import zbl_io
 import re
 import logging
 from randomized import sample_cartesian_product
+from stats import *
 
 MSC_LEAF_PATTERN = "\d\d.\d\d"
 MSC_ORDINARY_LEAF_PATTERN = "\d\d[A-Za-z]\d\d"
@@ -27,95 +28,6 @@ MSC_SECOND_LEVEL_RE = re.compile(MSC_SECOND_LEVEL)
 MSC_ORDINARY_SECOND_LEVEL_RE = re.compile(MSC_ORDINARY_SECOND_LEVEL)
 MSC_SPECIAL_SECOND_LEVEL_RE = re.compile(MSC_SPECIAL_SECOND_LEVEL)
 
-def _u_(msc2zblcodes, msc_codes, zbl_code, msc_predicate):
-    for msc_code in msc_codes:
-        if msc_predicate(msc_code):
-            msc2zblcodes[msc_code] = msc2zblcodes.get(msc_code, []) + [zbl_code]
-            
-def _keep_msc_(msc2sthing, keep_msccodes):
-    return dict((msc,sthing) for msc,sthing in msc2sthing.iteritems() if msc in keep_msccodes)
-    #return dict((msc,msc2sthing[msc]) for msc in keep_msccodes)            
-            
-def _msc2zblidlist_to_msc2count_(msc2zblidlist):
-    return dict( (msc,len(zbllist)) for msc,zbllist in msc2zblidlist.iteritems() )            
-
-def msc2count_filter(msc2count, min_count):
-    """Returns list of msc codes with count>=min_count."""
-    return [msc for msc,count in msc2count.iteritems() if count>=min_count] 
-
-###################################################################################################        
-###################################################################################################
-class MscModel:
-    def __init__(self, zbl_generator, \
-                 msc_predicate = lambda msc: MSC_ORDINARY_LEAF_PATTERN_RE.match(msc)):
-        self.msc2zblidlist = {}
-        self.mscprim2zblidlist = {}
-        self.mscsec2zblidlist = {}
-        self.msc2count = {}
-        self.mscprim2count = {}
-        self.mscsec2count = {}
-        self.update(zbl_generator, msc_predicate) 
-        
-    def update(self, zbl_generator, \
-               msc_predicate = lambda msc: MSC_ORDINARY_LEAF_PATTERN_RE.match(msc)):
-        logging.info("[MscModel.update] building msc2lists")
-        for zbl in zbl_generator:############
-            msc_codes = zbl_io.unpack_multivalue_field(zbl['mc'])
-            zbl_id = zbl[zbl_io.ZBL_ID_FIELD]
-            _u_(self.msc2zblidlist,      msc_codes, zbl_id, msc_predicate)
-            _u_(self.mscprim2zblidlist,  msc_codes[0:1], zbl_id, msc_predicate)
-            _u_(self.mscsec2zblidlist,   msc_codes[1:], zbl_id, msc_predicate)
-        #####################################
-        logging.info("[MscModel.update] calculating msc2counts")
-        self.msc2count      = _msc2zblidlist_to_msc2count_(self.msc2zblidlist)
-        self.mscprim2count  = _msc2zblidlist_to_msc2count_(self.mscprim2zblidlist)
-        self.mscsec2count   = _msc2zblidlist_to_msc2count_(self.mscsec2zblidlist)
-        
-    def report(self):
-        print "[MscModel] report"
-        print " len(self.msc2zblidlist)=", len(self.msc2zblidlist),"->",str(list(self.msc2zblidlist.iteritems()))[:75]
-        print " len(self.mscprim2zblidlist)=", len(self.mscprim2zblidlist),"->",str(list(self.mscprim2zblidlist.iteritems()))[:75]
-        print " len(self.mscsec2zblidlist)=", len(self.mscsec2zblidlist),"->",str(list(self.mscsec2zblidlist.iteritems()))[:75]
-        print " len(self.msc2count)=", len(self.msc2count),"->",str(list(self.msc2count.iteritems()))[:75]
-        print " len(self.mscprim2count)=", len(self.mscprim2count),"->",str(list(self.mscprim2count.iteritems()))[:75]
-        print " len(self.mscsec2count)=", len(self.mscsec2count),"->",str(list(self.mscsec2count.iteritems()))[:75]
-        
-    def keep(self, keep_msccodes):
-        #keep_msccodes = set(keep_msccodes)
-        self.msc2count      = _keep_msc_(self.msc2count, keep_msccodes)
-        self.mscprim2count  = _keep_msc_(self.mscprim2count, keep_msccodes)
-        self.mscsec2count   = _keep_msc_(self.mscsec2count, keep_msccodes)
-        self.msc2zblidlist      = _keep_msc_(self.msc2zblidlist, keep_msccodes)
-        self.mscprim2zblidlist  = _keep_msc_(self.mscprim2zblidlist, keep_msccodes)
-        self.mscsec2zblidlist   = _keep_msc_(self.mscsec2zblidlist, keep_msccodes)
-        
-    def allcodes(self):
-        """Returns set of all known codes."""
-        return self.msc2count.keys()
-        #return set(self.msc2count).union(set(self.mscprim2count)).union(set(self.mscsec2count))
-        
-    def N(self):
-        return len(self.allcodes())
-       
-    def keep_msc_mincount(self, min_count, minprim_count, minsec_count):        
-        logging.info("[keep_msc_mincount] min_count="+str(min_count)+", minprim_count="+str(minprim_count)+", minsec_count="+str(minsec_count))
-        all = set(self.allcodes())
-        if min_count<=0:
-            m1 = all
-        else:
-            m1 = set( msc2count_filter(self.msc2count, min_count) )
-        if minprim_count<=0:
-            m2 = all
-        else:            
-            m2 = set( msc2count_filter(self.mscprim2count, minprim_count) )
-        if minsec_count<=0:
-            m3 = all
-        else:
-            m3 = set( msc2count_filter(self.mscsec2count, minsec_count) ) 
-        keep_msccodes = m1.intersection(m2).intersection(m3)
-        self.keep(keep_msccodes)
-###################################################################################################        
-###################################################################################################
                 
 def group_zbl_by_msc(zbl_generator, \
                      msc_primary_predicate = lambda mscprim: MSC_ORDINARY_LEAF_PATTERN_RE.match(mscprim), \
@@ -146,6 +58,7 @@ def count_msc_occurences(file, records_filter = lambda x: True, field_name = "mc
         for code in codes:
             counts[code] = counts.get(code, 0) + 1    
     return counts
+
 
 
 def count_unique_prefixes(labels, prefix_len = 3):
@@ -181,6 +94,30 @@ def get_prefixes(labels, prefix_len):
     True
     """
     return set(label[0:prefix_len] for label in labels)
+
+def get_prefix2codes(codes, prefix_len):
+    """Returns dictionary{prefix-of-prefix_len: list-of-codes-with-this-prefix}."""
+    prefix2codes = {}
+    for code in codes:
+        prefix = code[:prefix_len]
+        prefix2codes[prefix] = prefix2codes.get(prefix,[]) + [code]
+    return prefix2codes 
+
+def number_of_child_codes_stats(msccodes, prefix_len = 5):
+    """Returns (average,standard-deviation,min,max) number of codes with common prefix of length = prefix_len."""
+    counts = list( len(codes) for prefix,codes in get_prefix2codes(msccodes, prefix_len).iteritems() )
+    return avg(counts), std(counts), min(counts), max(counts)
+
+def number_of_child_docs_stats(msc2zblidlist, prefix_len = 5):
+    """Returns (average,standard-deviation,min,max) number of documents belonging to common code."""    
+    msc2count = dict( (msc,len(zbliidlist)) for msc, zbliidlist in msc2zblidlist.iteritems() )
+    prefix2count = {}
+    for msccode,count in msc2count.iteritems():
+        prefix = msccode[:prefix_len]
+        prefix2count[prefix] = prefix2count.get(prefix, 0) + count
+    counts = prefix2count.values()
+    return avg(counts), std(counts), min(counts), max(counts)         
+        
 
 def get_elements_of_ixs(vec, ixs):
     """Retrieves elements of indexes ixs from list (vector) vec.
@@ -279,6 +216,118 @@ def mscmsc2sampleids_generator(msclist, msc2zblidlist, calculate_sample_size = 1
             sampleids = sample_cartesian_product(zblidlist1, zblidlist2, calculate_sample_size)
             logging.debug("[mscmsc2sampleids_generator]["+str(msc_i*len(msclist)+msc_j)+"/"+str(len(msclist)*len(msclist)/2)+"]"+str((msc1,msc2))+" -> "+str(sampleids))          
             yield (msc1,msc2), sampleids
+
+
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
+
+
+def _u_(msc2zblcodes, msc_codes, zbl_code, msc_predicate):
+    for msc_code in msc_codes:
+        if msc_predicate(msc_code):
+            msc2zblcodes[msc_code] = msc2zblcodes.get(msc_code, []) + [zbl_code]
+            
+def _keep_msc_(msc2sthing, keep_msccodes):
+    return dict((msc,sthing) for msc,sthing in msc2sthing.iteritems() if msc in keep_msccodes)
+    #return dict((msc,msc2sthing[msc]) for msc in keep_msccodes)            
+            
+def _msc2zblidlist_to_msc2count_(msc2zblidlist):
+    return dict( (msc,len(zbllist)) for msc,zbllist in msc2zblidlist.iteritems() )            
+
+def msc2count_filter(msc2count, min_count):
+    """Returns list of msc codes with count>=min_count."""
+    return [msc for msc,count in msc2count.iteritems() if count>=min_count] 
+
+###################################################################################################        
+###################################################################################################
+class MscModel:
+    def __init__(self, zbl_generator, \
+                 msc_predicate = lambda msc: MSC_ORDINARY_LEAF_PATTERN_RE.match(msc)):
+        self.msc2zblidlist = {}
+        self.mscprim2zblidlist = {}
+        self.mscsec2zblidlist = {}
+        self.msc2count = {}
+        self.mscprim2count = {}
+        self.mscsec2count = {}
+        self.update(zbl_generator, msc_predicate) 
+        
+    def update(self, zbl_generator, \
+               msc_predicate = lambda msc: MSC_ORDINARY_LEAF_PATTERN_RE.match(msc)):
+        logging.info("[MscModel.update] building msc2lists")
+        for zbl in zbl_generator:############
+            msc_codes = zbl_io.unpack_multivalue_field(zbl['mc'])
+            zbl_id = zbl[zbl_io.ZBL_ID_FIELD]
+            _u_(self.msc2zblidlist,      msc_codes, zbl_id, msc_predicate)
+            _u_(self.mscprim2zblidlist,  msc_codes[0:1], zbl_id, msc_predicate)
+            _u_(self.mscsec2zblidlist,   msc_codes[1:], zbl_id, msc_predicate)
+        #####################################
+        logging.info("[MscModel.update] calculating msc2counts")
+        self.msc2count      = _msc2zblidlist_to_msc2count_(self.msc2zblidlist)
+        self.mscprim2count  = _msc2zblidlist_to_msc2count_(self.mscprim2zblidlist)
+        self.mscsec2count   = _msc2zblidlist_to_msc2count_(self.mscsec2zblidlist)
+        
+    def report(self):
+        print "[MscModel] report"
+        print " len(self.msc2zblidlist)=", len(self.msc2zblidlist),"->",str(list(self.msc2zblidlist.iteritems()))[:75]
+        print " len(self.mscprim2zblidlist)=", len(self.mscprim2zblidlist),"->",str(list(self.mscprim2zblidlist.iteritems()))[:75]
+        print " len(self.mscsec2zblidlist)=", len(self.mscsec2zblidlist),"->",str(list(self.mscsec2zblidlist.iteritems()))[:75]
+        print " len(self.msc2count)=", len(self.msc2count),"->",str(list(self.msc2count.iteritems()))[:75]
+        print " len(self.mscprim2count)=", len(self.mscprim2count),"->",str(list(self.mscprim2count.iteritems()))[:75]
+        print " len(self.mscsec2count)=", len(self.mscsec2count),"->",str(list(self.mscsec2count.iteritems()))[:75]        
+        print " self.msc2count prefix3 avg,std,min,max child codes =", number_of_child_codes_stats(self.msc2count.keys(), prefix_len = 3)
+        print " self.msc2count prefix2 avg,std,min,max child codes =", number_of_child_codes_stats(self.msc2count.keys(), prefix_len = 2)
+        print " self.self.msc2zblidlist prefix5 avg,std,min,max child docs =", number_of_child_docs_stats(self.msc2zblidlist, prefix_len = 5)
+        print " self.self.msc2zblidlist prefix3 avg,std,min,max child docs =", number_of_child_docs_stats(self.msc2zblidlist, prefix_len = 3)
+        print " self.self.msc2zblidlist prefix2 avg,std,min,max child docs =", number_of_child_docs_stats(self.msc2zblidlist, prefix_len = 2)
+        print " self.self.mscprim2zblidlist prefix5 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscprim2zblidlist, prefix_len = 5)
+        print " self.self.mscprim2zblidlist prefix3 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscprim2zblidlist, prefix_len = 3)
+        print " self.self.mscprim2zblidlist prefix2 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscprim2zblidlist, prefix_len = 2)
+        
+    def keep(self, keep_msccodes):
+        #keep_msccodes = set(keep_msccodes)
+        self.msc2count      = _keep_msc_(self.msc2count, keep_msccodes)
+        self.mscprim2count  = _keep_msc_(self.mscprim2count, keep_msccodes)
+        self.mscsec2count   = _keep_msc_(self.mscsec2count, keep_msccodes)
+        self.msc2zblidlist      = _keep_msc_(self.msc2zblidlist, keep_msccodes)
+        self.mscprim2zblidlist  = _keep_msc_(self.mscprim2zblidlist, keep_msccodes)
+        self.mscsec2zblidlist   = _keep_msc_(self.mscsec2zblidlist, keep_msccodes)
+        
+    def allcodes(self):
+        """Returns set of all known codes."""
+        return self.msc2count.keys()
+        #return set(self.msc2count).union(set(self.mscprim2count)).union(set(self.mscsec2count))
+        
+    def N(self):
+        return len(self.allcodes())
+       
+    def keep_msc_mincount(self, min_count, minprim_count, minsec_count):        
+        logging.info("[keep_msc_mincount] min_count="+str(min_count)+", minprim_count="+str(minprim_count)+", minsec_count="+str(minsec_count))
+        all = set(self.allcodes())
+        if min_count<=0:
+            m1 = all
+        else:
+            m1 = set( msc2count_filter(self.msc2count, min_count) )
+        if minprim_count<=0:
+            m2 = all
+        else:            
+            m2 = set( msc2count_filter(self.mscprim2count, minprim_count) )
+        if minsec_count<=0:
+            m3 = all
+        else:
+            m3 = set( msc2count_filter(self.mscsec2count, minsec_count) ) 
+        keep_msccodes = m1.intersection(m2).intersection(m3)
+        self.keep(keep_msccodes)
+###################################################################################################        
+###################################################################################################
+
+
+
+
+
 
 
 if __name__ == "__main__":

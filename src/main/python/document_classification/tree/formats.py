@@ -12,9 +12,7 @@ def assignment2clustdesc_converter(assignment, elementno2elementname = None):
     
     clustdesc = {}
     for element_no, cluster_name in enumerate(assignment):
-        cluster_elements = clustdesc.get(cluster_name, [])
-        cluster_elements.append( elementno2elementname[element_no] )
-        clustdesc[cluster_name] = cluster_elements
+        clustdesc[cluster_name] = clustdesc.get(cluster_name, []) + [ elementno2elementname[element_no] ]
     return clustdesc
 
 

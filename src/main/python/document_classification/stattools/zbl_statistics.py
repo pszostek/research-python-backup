@@ -36,6 +36,8 @@ def contains2of_diff_prefix(lmc, num):
             return True
     return False
 
+    
+
 def count_label_statistics(fname, fields):
     """
     Counts the following statistics and prints them. 

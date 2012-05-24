@@ -15,6 +15,7 @@ import logging
 import trees
 import math
 import time
+import trees
 
 def gen_random_assignment(leaves, minpow = 0.25, maxpow = 0.75):
     """Returns random assignment for leaves."""
@@ -63,3 +64,10 @@ def compare_to_random_tree(msc_leaf2clusters, \
     #print indexes_dict
      
     return (num_l, num_m, indexes_dict)
+
+
+def get_random_tree_leaf2clusters(leaves, minpow = 0.25, maxpow = 0.75):
+    """See: get_random_tree."""
+    rand_tree = get_random_tree(leaves, minpow, maxpow)    
+    rand_leaf2clusters = trees.bottomup2topdown_tree_converter(rand_tree)
+    return rand_leaf2clusters,rand_tree

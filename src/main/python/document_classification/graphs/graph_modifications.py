@@ -303,9 +303,26 @@ def print_graph_analysis(fin,fout,argv):
     print "sum partition= size",sum(partitions_len)
     print "histogram:", sorted(list(hist(partitions_len).iteritems()))
    
+def extract_biggest_partition_ids(fin,fout,argv):
+    print "Loading graph from",fin
+    id2ids = dict( yield_file_nodes(fin) )
+    print len(id2ids),"lines (nodes with outgoing edges) loaded"
+
+    partitions = divide_reachable_graphs(id2ids)
+    partitions_len = [len(p) for p in partitions]  
+    print len(partitions),"graph partitions"
+    print "min partition size=",min(partitions_len)
+    print "avg partition size=",avg(partitions_len)
+    print "std partition size=",std(partitions_len)
+    print "max partition size=",max(partitions_len)
+    print "sum partition= size",sum(partitions_len)
+    print "histogram:", sorted(list(hist(partitions_len).iteritems()))
     
-    
-    
+    biggest_partition_ids = max(zip(partitions_len,partitions))[1]
+    for id in biggest_partition_ids: 
+        fout.write(str(id))
+        fout.write("\n")
+        
 def random_graph_file(fin,fout,argv):
     try:
         minnodes = int(argv[0])        
@@ -354,7 +371,7 @@ if __name__ == "__main__":
     subroutines["-stats"] = ("prints out several graph's statistics", print_graph_analysis)    
     subroutines["-rand"] = ("[minnodes][maxnodes][minout][maxout] prints out random graph for given params", random_graph_file)
     subroutines["-inve"] = ("inverts edges' directions in graph", invert_graph_edges_file)
-    
+    subroutines["-bpart"] = ("extracts list of nodes in the biggest (connected) partition in graph", extract_biggest_partition_ids)
 
     try:
         cmd = sys.argv[1]

@@ -47,8 +47,10 @@ def validate_similarity_matrix(simmatrix,minval=MIN_SIMILARITY_VALUE,maxval=MAX_
     """Returns [(row1,col1,val11),...,(rowN,colN,valNN)] of cells where simmatrix value is incorrect."""
     errors = []
     for rowno, row in enumerate(simmatrix):
+        if (rowno%100==0): logging.info("[validate_similarity_matrix] row="+str(rowno)+" out of="+str(len(simmatrix)))
         for colno, element in enumerate(row):
             if element<minval or element>maxval:
+                logging.info("[validate_similarity_matrix] error: "+str( (rowno, colno, element) )) 
                 errors.append( (rowno, colno, element) )
     return errors       
 

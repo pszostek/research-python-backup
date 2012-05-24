@@ -45,7 +45,7 @@ MIN_COUNT_MSC = 3 #ile minimalnie dokumentow zeby zachowac klase
 NUM_TRIES = 100 #ile eksperymenow
 VALID_LEAF_PATTERN_RE = msc_processing.MSC_ORDINARY_LEAF_PATTERN_RE
 
-bonding_calc = lambda common_levels: common_levels/3.0
+bonding_calc = lambda common_path_fraction: common_path_fraction
 membership_calc = lambda common_levels: common_levels/2.0
 membership_bonding = angular_bonding
 only_fast_calculations = False

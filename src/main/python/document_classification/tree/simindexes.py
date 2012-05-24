@@ -52,13 +52,14 @@ def Brouwer_abcd(B1, B2, \
     
     B1,B2 - two bonding matrices (lists of lists).
     Matrices' size is NxN where N = number of samples.
-    """
+    """    
     cB1 = complement_calc(B1)
     cB2 = complement_calc(B2)
     a = matrix2scalar_calc( aggregation_calc(B1, B2) )
     b = matrix2scalar_calc( aggregation_calc(cB1, B2) )
     c = matrix2scalar_calc( aggregation_calc(B1, cB2) )
-    d = matrix2scalar_calc( aggregation_calc(cB1, cB2) )    
+    d = matrix2scalar_calc( aggregation_calc(cB1, cB2) )
+    logging.info("[Brouwer_abcd] a="+str(a)+"b="+str(b)+"c="+str(c)+"d="+str(d))    
     return (a,b,c,d)
 
 def Campello_abcd(V,X,Y,Z, \
@@ -73,6 +74,7 @@ def Campello_abcd(V,X,Y,Z, \
     b = matrix2scalar_calc( aggregation_calc(X, Y) )
     c = matrix2scalar_calc( aggregation_calc(V, Z) )
     d = matrix2scalar_calc( aggregation_calc(X, Z) )
+    logging.info("[Campello_abcd] a="+str(a)+"b="+str(b)+"c="+str(c)+"d="+str(d))
     return (a,b,c,d)
 
 

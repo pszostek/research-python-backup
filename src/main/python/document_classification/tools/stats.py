@@ -6,6 +6,15 @@ def avg(lst):
     """Calculates average of elements from the list."""
     return sum(lst)/float(len(lst))
 
+def avgmin(lst, fraction=0.05):
+    """Calculates average of fraction of min elements."""
+    return avg( sorted(lst)[:int(round(len(lst)*fraction))] )
+
+def avgmax(lst, fraction=0.05):
+    """Calculates average of fraction of max elements."""
+    return avg( sorted(lst)[-int(round(len(lst)*fraction)):] )
+
+
 def std(lst):
     """Calculates standard deviation with Bessel's correction."""
     mi = avg(lst)

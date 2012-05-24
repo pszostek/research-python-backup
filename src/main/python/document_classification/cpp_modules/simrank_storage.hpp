@@ -51,6 +51,8 @@ T **allocMatrix(int rows, int cols) {
 	for (int i=0; i<rows; ++i) {
 		storage[i] = new double[cols];
 	}
+	float totalmem = (rows/1024.0)*(cols/1024.0)*sizeof(double);
+	cerr<<"[allocMatrix] rows="<<rows<<" cols="<<cols<<" ds="<<sizeof(double)<<" mem="<<round(totalmem)<<" MB"<<endl;
 	return storage;
 }
 

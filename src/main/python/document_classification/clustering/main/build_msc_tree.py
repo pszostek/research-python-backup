@@ -3,20 +3,31 @@ import sys,os
 sys.path.append(r'../')
 sys.path.append(r'../../')
 sys.path.append(r'../../../')
-from tools import msc_processing
-from tools.msc_processing import *
-from tools import randomized
-from data_io import zbl_io
-from data_io import matrix_io
-import sim_matrix
+
 import random
 import logging
 import pickle
 from math import sqrt 
 import numpy
-from sim_aggregation import *
+import time
+import os.path
+import base64
+
+
+from tools import msc_processing
+from tools.msc_processing import *
+from tools import randomized
 from tools.stats import *
 from tools.randomized import *
+from tools import cpp_wrapper
+from tools import aux
+
+from data_io import zbl_io
+from data_io import matrix_io
+
+import sim_matrix
+from sim_aggregation import *
+from sim_matrix import build_sparse_similiarity_matrix
 
 import clustering 
 from clustering import kmedoids
@@ -29,30 +40,15 @@ from tree import trees
 from trees import *
 from tree import tree_distance
 from tree.tree_distance import *
-from tree.random_tree import *
+from tree import random_tree
 
+import tree_clustering
 
-##l - low level, m - medium level, h - highest level of MSC tree
+from cfg import *
 
-#CODES PREFILTERING:
-MIN_COUNT_MSC = 0 #ile minimalnie dokumentow zeby zachowac klase
-MIN_COUNT_MSCPRIM = 3
-MIN_COUNT_MSCSEC = 0
-
-#SAMPLING OF CODES REPRESENTATIONS:    
-mscmsc_calculate_sample_size = lambda n: 100000 #ile par dokument x dokument dla kazdego z msc x msc    
-
-#CLUSTERING:
-similarity_aggregator_l = avg #should work on list
-similarity_aggregator_m = matrix_avg_U #should work on matrix
-clustering_l = lambda sim: kmedoids.kmedoids_clustering(sim, sqrt(len(sim))+1, 100) 
-clustering_m = lambda sim: kmedoids.kmedoids_clustering(sim, sqrt(len(sim))+1, 100) 
-        
-#SIMILARITY CACLULATIONS:    
-bonding_calc = lambda common_levels: common_levels/3.0
-membership_calc = lambda common_levels: common_levels/2.0
-membership_bonding = angular_bonding
-only_fast_calculations = True 
+##############################################################################
+##############################################################################
+##############################################################################
 
 
 def _get_zbl_generator_(zbl_path, must_have_field = 'mc'):
@@ -64,47 +60,58 @@ def _get_zbl_generator_(zbl_path, must_have_field = 'mc'):
         if must_have_field in zbl:
             #zbl[zbl_io.ZBL_ID_FIELD] = ix #replacing ids with numbers for faster processing
             yield zbl
-    
-
-                            
             
+##############################################################################
+##############################################################################
+##############################################################################
+
+                                        
 def __report_simmatrix_routine__(name, matrix):
     if len(sim_matrix.validate_similarity_matrix(matrix))>0: print "ERROR. invalid similarity values in ",name,"!"; sys.exit(-2)
     print "",name," of size ",len(matrix),"x",len(matrix[0])
     print str(numpy.array(matrix))[:500]
     
     
-def __generate_trees_routine___(msc2ix, assignment_l, assignment_m, ):            
-    msc_tree = trees.build_msctree(msc2ix.keys(), msc2ix)
-    msc_leaf2clusters = trees.bottomup2topdown_tree_converter(msc_tree)
-    new_tree = trees.build_3level_tree(assignment_l, assignment_m)
-    new_leaf2clusters = trees.bottomup2topdown_tree_converter(new_tree)
-    rand_tree = get_random_tree(msc2ix.values())    
-    rand_leaf2clusters = trees.bottomup2topdown_tree_converter(rand_tree)
+
+
+##############################################################################
+##############################################################################
+##############################################################################
     
-    ix2msc = dict((ix,msc) for msc,ix in msc2ix.iteritems())
-    print " msc2ix=",str(msc2ix)[:200]
-    print " msc_tree=",str(trees.map_tree_leaves(msc_tree, ix2msc))[:200]
-    print " new_tree=",str(trees.map_tree_leaves(new_tree, ix2msc))[:200]
-    print " rand_tree=",str(trees.map_tree_leaves(rand_tree, ix2msc))[:200]
-            
-    return msc_leaf2clusters, new_leaf2clusters, rand_leaf2clusters
+def get_msc2wids_list_primarymsc(msc2ix, mscmodel):
+    """Returns list of pairs (msc-code, list-of-weighted-ids-of-elements (pairs (ix,weight) ) )"""
+    ix2msc   = dict((ix,msc) for msc,ix in msc2ix.iteritems())
+    msc2wids_list = []
+    for ix in xrange(len(ix2msc)):
+        msc     = ix2msc[ix]
+        wids    = list( (id,1.0) for id in mscmodel.mscprim2zblidlist[msc] )
+        msc2wids_list.append( (msc, wids) )
+    return msc2wids_list 
 
-
-def __calc_simindexes_routine__(msc_leaf2clusters, new_leaf2clusters, rand_leaf2clusters):
-    self_comparision = tree_distance.get_indexes_dict(msc_leaf2clusters, msc_leaf2clusters, \
-                                            bonding_calc, membership_calc, membership_bonding,\
-                                            only_fast_calculations)
-    new_comparision = tree_distance.get_indexes_dict(msc_leaf2clusters, new_leaf2clusters, \
-                                            bonding_calc, membership_calc, membership_bonding,\
-                                            only_fast_calculations)
-    rand_comparision = tree_distance.get_indexes_dict(msc_leaf2clusters, rand_leaf2clusters, \
-                                            bonding_calc, membership_calc, membership_bonding,\
-                                            only_fast_calculations)
-    return self_comparision,new_comparision,rand_comparision
- 
-            
+def ____validate_cpp_output____(msc2ix, rows):
+    #validate output:
+    ix2msc = dict( (ix,msc) for msc,ix in msc2ix.iteritems() )
+    for ix,row in enumerate(rows):
+        if not ix2msc[ix] == row:
+            print "[ERROR] aggregate_simmatrix invalid output!"
+            sys.exit(-2)
         
+
+def __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix):
+    msc2wids_list = get_msc2wids_list_primarymsc(msc2ix, mscmodel)
+    dstmatrixpath = "/tmp/bmt_"+base64.b16encode(aux.quick_md5(sim_matrix_path+similarity_aggregator_method_l+str(MIN_COUNT_MSCPRIM)))
+    if not aux.exists(dstmatrixpath):
+        cpp_wrapper.aggregate_simmatrix(sim_matrix_path, dstmatrixpath, msc2wids_list, method=similarity_aggregator_method_l)
+    logging.info("Loading simmatrix from "+str(dstmatrixpath))            
+    (rows, cols, sim_matrix_l) = matrix_io.fread_smatrix(dstmatrixpath)
+    ____validate_cpp_output____(msc2ix, rows)    
+    return sim_matrix_l
+
+##############################################################################
+##############################################################################
+##############################################################################
+
+                
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     try:
@@ -118,11 +125,12 @@ if __name__ == "__main__":
         print "Argument exepected: similarity-matrix"
         sys.exit(-1)
         
+    print "Framework that reconstructs msc-tree."
         
     print "--------------------------------------------------------"           
     print "Loading ZBL records from zbl_path=",zbl_path    
     zblid2zbl = dict( (zbl[zbl_io.ZBL_ID_FIELD],zbl) for zbl in _get_zbl_generator_(zbl_path) )
-    print " zblid2zbl=",str(list(zblid2zbl.iteritems()))[:100]
+    print " zblid2zbl [",len(zblid2zbl),"docs loaded] =",str(list(zblid2zbl.iteritems()))[:100]
     
     print "--------------------------------------------------------"
     print "Building model MSC codes counts..."
@@ -132,77 +140,56 @@ if __name__ == "__main__":
     print "Filtering msccodes with MIN_COUNT_MSC=",MIN_COUNT_MSC," MIN_COUNT_MSCPRIM=",MIN_COUNT_MSCPRIM," MIN_COUNT_MSCSEC=",MIN_COUNT_MSCSEC
     mscmodel.keep_msc_mincount(MIN_COUNT_MSC, MIN_COUNT_MSCPRIM, MIN_COUNT_MSCSEC)
     mscmodel.report()
+    #store_mscgroups_primary(open("msc_groups.txt", "w"), mscmodel.mscprim2zblidlist)
     
     print "--------------------------------------------------------"
     print "Calculating msc2ix mapping..."
-    msc2ix = dict((msc,ix) for ix,msc in enumerate(mscmodel.allcodes()))    
-    print " msc2ix=",str(list(msc2ix.iteritems()))[:100] 
-        
-    print "--------------------------------------------------------"
-    print "Loading sim_matrix_p from sim_matrix_path=",sim_matrix_path
-    if sim_matrix_path.endswith(".pickle"):
-        (rows, cols, sim_matrix_p) = pickle.load(open(sim_matrix_path))
-    else:
-        (rows, cols, sim_matrix_p) = matrix_io.fread_smatrix_L(sim_matrix_path) #, datareader=matrix_io.__read_ftabs__, maxrows=1000
-        print " pickling to=",(sim_matrix_path+".pickle")
-        pickle.dump((rows, cols, sim_matrix_p), open(sim_matrix_path+".pickle", "wb"))    
-    print "","matrix of size=",len(rows),"x",len(cols),"loaded:",str(sim_matrix_p[:10])[:100]
-    if len(sim_matrix.validate_similarity_matrix(sim_matrix_p))>0: print "ERROR. invalid elements in sim_matrix_p!"; sys.exit(-2)
-    zblid2simix = dict( (label,ix) for ix,label in enumerate(rows) )
-    print " zblid2simix=", str(list(zblid2simix.iteritems()))[:100] 
-    #metoda liczenia odleglosci miedzy dwoma dokumentami:
-    def doc2doc_similarity_calculator(zbl1, zbl2):        
-        zblid1, zblid2 = zbl1[zbl_io.ZBL_ID_FIELD], zbl2[zbl_io.ZBL_ID_FIELD]
-        #logging.info("[doc2doc_similarity_calculator] comparing "+str(zblid1)+" vs. "+str(zblid2)) 
-        ix1,ix2 = zblid2simix[zblid1],zblid2simix[zblid2]
-        #print "[doc2doc_similarity_calculator] ix1,ix2=",ix1,ix2
-        return sim_matrix_p[max(ix1,ix2)][min(ix1,ix2)]
-    
-    print "--------------------------------------------------------"
-    print "Preparing similarity matrix on L-level ..."
-    sim_matrix_l = matrix_io.create_matrix(mscmodel.N(), mscmodel.N(), value = 0.0)
-    matrix_io.set_diagonal(sim_matrix_l, sim_matrix.MAX_SIMILARITY_VALUE)
-    
-    print "--------------------------------------------------------"
-    print "Building similarity matrix on L-level (aggregator:",similarity_aggregator_l,")..."
-    for (msc1,msc2),zbl_ids_pairs in mscmsc2sampleids_generator(mscmodel.mscprim2count.keys(), mscmodel.mscprim2zblidlist, mscmsc_calculate_sample_size):        
-        mscix1, mscix2 = msc2ix[msc1], msc2ix[msc2]         
-        zbl2zbl_sim_submatrix  = sim_matrix.build_sparse_similiarity_matrix(zblid2zbl, zbl_ids_pairs, doc2doc_similarity_calculator)                        
-        sim_matrix_l[mscix1][mscix2] = sim_matrix_l[mscix2][mscix1] = similarity_aggregator_l(zbl2zbl_sim_submatrix.values())
-        #logging.info("[build_mscmsc_sim]"+str((msc1,msc2))+":"+str(list(zbl2zbl_sim_submatrix.iteritems()))[:100]+ " -> "+str(sim_matrix_l[mscix1][mscix2]) )                 
-    __report_simmatrix_routine__("sim_matrix_l", sim_matrix_l)
+    msc2ix = dict((msc,ix) for ix,msc in enumerate(sorted(mscmodel.allcodes())))
+    ix2msc = dict((ix,msc) for msc,ix in msc2ix.iteritems())
+    msc_list = list( sorted(mscmodel.allcodes()) )    
+    print " msc2ix=",str(list(msc2ix.iteritems()))[:100]             
             
     print "--------------------------------------------------------"
-    print "Clustering L-level (xxyzz) (method:",str(clustering_l),")..."
-    assignment_l = clustering_l(sim_matrix_l)
-    print "\tassignment_l = ",str(assignment_l)[:200]        
-    
-    print "--------------------------------------------------------"
-    print "Aggregating similarity matrix on M-level (aggregator:",str(similarity_aggregator_m),")..."
-    sim_matrix_m = sim_matrix.aggregate_similarity_matrix_a(sim_matrix_l, assignment_l, similarity_aggregator_m)
-    __report_simmatrix_routine__("sim_matrix_m", sim_matrix_m)
+    print "Preparing similarity matrix on L-level..."
+    #sim_matrix_l = __python_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix)
+    sim_matrix_l = __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix)     
+    __report_simmatrix_routine__("sim_matrix_l", sim_matrix_l)
 
-    print "--------------------------------------------------------"
-    print "Clustering M-level (xxy) (method:",str(clustering_m),")..."
-    assignment_m = clustering_m(sim_matrix_m)
-    print "\tassignment_m = ",str(assignment_m)[:200]    
-        
-    print "--------------------------------------------------------"
     print "--------------------------------------------------------"    
-    print "Building MSC tree(s) out of", len(set(msc2ix.keys())), "leaves"
-    msc_leaf2clusters, new_leaf2clusters, rand_leaf2clusters = __generate_trees_routine___(msc2ix, assignment_l, assignment_m)        
+    print "Building MSC tree out of", len(set(msc2ix.keys())), "leaves..."    
+    msc_leaf2clusters, msc_tree = trees.build_msctree_leaf2clusters(msc2ix, msc2ix)
+    
+    #MSC
+    #new_leaf2clusters, new_tree = msc_leaf2clusters, msc_tree
+    
+    #RAND
+    new_leaf2clusters, new_tree = random_tree.get_random_tree_leaf2clusters(msc2ix.values())
+
+    #3level-tree
+    #new_leaf2clusters, new_tree = tree_clustering.generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m)                 
+        
+    #UPGMA
+    #new_tree = tree_clustering.generate_upgma_tree(sim_matrix_l, agreggation_method = 'a')     
+    #new_leaf2clusters = trees.bottomup2topdown_tree_converter(new_tree)
+    
+    print " new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))[:400]
     
     print "--------------------------------------------------------"
     print "--------------------------------------------------------"
     print "Calculating similarity indexes..."
-    self_comparision,new_comparision,rand_comparision = \
-    __calc_simindexes_routine__(msc_leaf2clusters, new_leaf2clusters, rand_leaf2clusters)
+    comparision_result = tree_distance.get_indexes_dict(msc_leaf2clusters, new_leaf2clusters, \
+                                            bonding_calc, membership_calc, membership_bonding,\
+                                            only_fast_sim_calculations)
     print " *******************************************"
-    print " self_comparision indexes=",self_comparision
-    print " new_comparision=",new_comparision
-    print " rand_comparision=",rand_comparision
+    print " comparision results=",comparision_result
+    
+    print "--------------------------------------------------------"
+    print "Calculating boding out of new tree..."
+    new_B = B_using_tree_l2c(new_leaf2clusters, bonding_calc)    
+    print "bonding=",str(new_B)[:200]
+    print " storing new_tree bonding matrix to",NEWTREE_BONDING_PATH
+    matrix_io.fwrite_smatrix(new_B, msc_list, msc_list, NEWTREE_BONDING_PATH)        
+
+    
  
-    
-    
-    
     

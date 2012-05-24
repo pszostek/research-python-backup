@@ -7,6 +7,7 @@ from trees import formats
 import logging 
 from itertools import izip
 import upgma
+from tools import stats
 
 def _c_as_(simmatrix, element_i, cluster_elements):
     """Calculates avg similarity for cluster.
@@ -53,25 +54,31 @@ def sil_i(a_i, b_i):
     """Returns sil_i for given a_i and b_i."""
     return float(a_i-b_i) / max(a_i,b_i)
 
+def f_sil(simmatrix, assignment, f = stats.avg):
+    """For given assignment to clusters calculates f(silhouettes).
+        
+    simmatrix - similarity matrix (list of lists of values in [0,1])
+    assignment - list of clusters numbers that are assigned to elements (i-th index on the list means i-th element)     
+    """    
+    cluster2elements    = formats.assignment2clustdesc_converter(assignment)
+    cluster2elements    = dict( (cluster,set(elements)) for cluster,elements in cluster2elements.iteritems() )
+    
+    number_of_elements  = len(assignment)
+    sils           = []    
+    for element_i, element_i_cluster in izip( xrange(number_of_elements), assignment):         
+        a_i, b_i = ab(cluster2elements, simmatrix, element_i, element_i_cluster)        
+        sils.append( sil_i(a_i, b_i) )
+    return f(sils)
+
 def avg_sil(simmatrix, assignment):
     """For given assignment to clusters calculates average silhouette.
     
     simmatrix - similarity matrix (list of lists of values in [0,1])
     assignment - list of clusters numbers that are assigned to elements (i-th index on the list means i-th element) 
     """    
-    cluster2elements    = formats.assignment2clustdesc_converter(assignment)
-    cluster2elements    = dict( (cluster,set(elements)) for cluster,elements in cluster2elements.iteritems() )
-    
-    number_of_elements  = len(assignment)
-    total_sil           = 0.0    
-    for element_i, element_i_cluster in izip( xrange(number_of_elements), assignment):         
-        a_i, b_i = ab(cluster2elements, simmatrix, element_i, element_i_cluster)
-        logging.info("[avg_sil] element_i="+str(element_i)+" element_i_cluster="+str(element_i_cluster)+" a_i, b_i="+str( (a_i, b_i) ))
-        total_sil = total_sil + sil_i(a_i, b_i)
-    return float(total_sil) / number_of_elements
+    return avg_sil(simmatrix, assignment, f = stats.avg)
 
-
-def silhouettes(simmatrix, possible_k, clustering_method):
+def silhouettes(simmatrix, possible_k, clustering_method, f = stats.avg):
     """
     Returns {k-value: average-silhouette(k)}.
     
@@ -82,7 +89,7 @@ def silhouettes(simmatrix, possible_k, clustering_method):
     k2avgsil = {}
     for k in possible_k:        
         assignment          = clustering_method(simmatrix, k)    
-        k2avgsil[k]         = avg_sil(simmatrix, assignment)
+        k2avgsil[k]         = f_sil(simmatrix, assignment, f)
         logging.info("[silhouettes] considering k="+str(k)+" -> "+str(k2avgsil[k]))
     logging.info("[silhouettes] k2avgsil="+str(k2avgsil))
     return k2avgsil

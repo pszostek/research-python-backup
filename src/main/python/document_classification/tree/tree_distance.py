@@ -116,7 +116,7 @@ def _comparision_report_(T,T2):
     print "Tree1:",T
     print "Tree2:",T2
 
-    bonding_calc = lambda common_levels: common_levels/3.0
+    bonding_calc = lambda common_path_fraction: common_path_fraction
     membership_calc = lambda common_levels: common_levels/2.0
     membership_bonding = angular_bonding
     

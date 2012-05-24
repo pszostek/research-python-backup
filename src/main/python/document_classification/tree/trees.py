@@ -91,6 +91,10 @@ def bottomup2topdown_tree_converter(tree):
     Sample use:
     >>> bottomup2topdown_tree_converter([ [[0, 1, 3], [2, 5]], [[4]] ])
     {0: [0, 0], 1: [0, 0], 2: [0, 1], 3: [0, 0], 4: [1, 2], 5: [0, 1]}
+    >>> bottomup2topdown_tree_converter([ [[0, 1, 3], [2, 5]], [4] ])
+    {0: [0, 0], 1: [0, 0], 2: [0, 1], 3: [0, 0], 4: [1, 2], 5: [0, 1]}
+    >>> bottomup2topdown_tree_converter([ [[[0, 1], 3], [2, 5]], [4] ])
+    {0: [0, 0, 0], 1: [0, 0, 0], 2: [0, 1], 3: [0, 0], 4: [1], 5: [0, 1]}
     >>> sorted(list(bottomup2topdown_tree_converter([ [[['a','b'], ['c']] , [['d','e','f'],['g','h']]], [[['x']],[['y']]] ]).iteritems()))
     [('a', [0, 0, 0]), ('b', [0, 0, 0]), ('c', [0, 0, 1]), ('d', [0, 1, 2]), ('e', [0, 1, 2]), ('f', [0, 1, 2]), ('g', [0, 1, 3]), ('h', [0, 1, 3]), ('x', [1, 2, 4]), ('y', [1, 3, 5])]
     """
@@ -149,6 +153,18 @@ def trim_common_leaves(leaf2clusters_1, leaf2clusters_2):
     trim(leaf2clusters_2, commonleaves)
     return (leaf2clusters_1, leaf2clusters_2)
     
+
+
+def build_msctree_leaf2clusters(mscleaves, msc2ix):
+    """Does the same as build_msctree but result is converted."""
+    msc_tree = build_msctree(mscleaves, msc2ix)
+    msc_leaf2clusters = bottomup2topdown_tree_converter(msc_tree)
+    return msc_leaf2clusters,msc_tree 
+
+def tree_depth(leaf2clusters):
+    """Returns length of the longest path from root to leaves."""
+    return max(len(c) for l,c in leaf2clusters.iteritems())+1
+
     
 if __name__=="__main__":      
     import doctest
