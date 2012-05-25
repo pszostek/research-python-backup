@@ -20,13 +20,13 @@ void simrank(const Graph* g, RFactory* rFactory, double C, int numIter) {
 	}
 };
 
-void simrankParallel(const Graph* g, RFactory* rFactory, double C, int numIter, int numThreads=1) {
+void simrankParallel(const Graph* g, ParallelRFactory* rFactory, double C, int numIter, int numThreads=1) {
 	if (numThreads == 1) {
 		simrank(g, rFactory, C, numIter);
 		return;
 	}
 	cerr<<"[simrank] running parallel version"<<endl;
-	RNext* R0 = rFactory->getInitial(g);
+	RNext* R0 = rFactory->getInitial(g, numThreads);
 	long starttime = time(0);
 	vector<ThreadArgs> targs = prepareThreadsArgs(numThreads, g, C);
 	initR0Parallel(R0, targs);

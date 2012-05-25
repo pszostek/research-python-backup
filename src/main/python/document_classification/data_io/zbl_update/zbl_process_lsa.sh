@@ -1,17 +1,18 @@
 #!/bin/bash
 
 echo "The program calculates LSA for ZBL-file."
-if [ $1 ] && [ $2 ]
+if [ $1 ] && [ $2 ] && [ $3 ]
 then
   echo "IN: $1"
   echo "OUT: $2"
+  echo "NUM TOPICS: $3"
 else  
-  echo "Two args expected: input-zbl-file output-zbl-file"
+  echo "Three args expected: input-zbl-file output-zbl-file num-topics"
   exit 1
 fi
+
 echo "----------------------------------------"
-#preprocessing (filtering, stemming):
-#python zbl_process_file.py -copyfield ti TI < $1 | python zbl_process_file.py -copyfield ut UT | python zbl_process_file.py -copyfield ab AB | python zbl_process_file.py -filter ti,ut,ab | python zbl_process_file.py  -stemming porter ti,ut,ab | python zbl_process_file.py -filterrecfield ti,ut,ab > /tmp/zbl_filtered_stemmed.zbl.txt
+mkdir models_lsa$3
 echo "----------------------------------------"
 #converting words into ids
 python zbl_process_file.py -gensim_dict ti,ut,ab < $1
@@ -24,8 +25,11 @@ echo "----------------------------------------"
 python zbl_process_file.py -gensim_tfidfmap < /tmp/zbl_filtered_stemmed_g0.zbl.txt > /tmp/zbl_filtered_stemmed_g1.zbl.txt
 echo "----------------------------------------"
 #calculating lsa topics
-python zbl_process_file.py -gensim_lsa 1000 < /tmp/zbl_filtered_stemmed_g1.zbl.txt 
+python zbl_process_file.py -gensim_lsa $3 < /tmp/zbl_filtered_stemmed_g1.zbl.txt 
 echo "----------------------------------------"
 python zbl_process_file.py -gensim_lmap < /tmp/zbl_filtered_stemmed_g1.zbl.txt > $2
+echo "----------------------------------------"
+cp /tmp/*.pickle models_lsa$3
+cp /tmp/gensim_semantic_model_topics.txt models_lsa$3
 echo "----------------------------------------"
 

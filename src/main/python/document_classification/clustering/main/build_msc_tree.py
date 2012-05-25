@@ -163,16 +163,16 @@ if __name__ == "__main__":
     #new_leaf2clusters, new_tree = msc_leaf2clusters, msc_tree
     
     #RAND
-    new_leaf2clusters, new_tree = random_tree.get_random_tree_leaf2clusters(msc2ix.values())
+    #new_leaf2clusters, new_tree = random_tree.get_random_tree_leaf2clusters(msc2ix.values())
 
     #3level-tree
-    #new_leaf2clusters, new_tree = tree_clustering.generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m)                 
+    new_leaf2clusters, new_tree = tree_clustering.generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m)                 
         
     #UPGMA
     #new_tree = tree_clustering.generate_upgma_tree(sim_matrix_l, agreggation_method = 'a')     
     #new_leaf2clusters = trees.bottomup2topdown_tree_converter(new_tree)
     
-    print " new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))[:400]
+    print " new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))#[:400]
     
     print "--------------------------------------------------------"
     print "--------------------------------------------------------"

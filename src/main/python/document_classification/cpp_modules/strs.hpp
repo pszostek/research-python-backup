@@ -71,6 +71,13 @@ int strToInt(const string& str) {
 	return i;
 }
 
+string intToStr(int i) {
+	ostringstream ss;
+	ss << i;
+	return ss.str();
+}
+
+
 double strToFloat(const string& str) {
 	double value;
 	std::istringstream sstr(str);

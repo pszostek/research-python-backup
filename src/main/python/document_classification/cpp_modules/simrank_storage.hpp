@@ -3,8 +3,11 @@
 #define SIMRANK_STORAGE
 
 #include "graph.hpp"
+#include "matrix_io.hpp"
+#include "strs.hpp"
 #include <iostream>
 #include <ctime>
+#include <stdio.h>
 
 using namespace std;
 
@@ -24,8 +27,12 @@ struct RFactory {
 	virtual RPrev* getPrev() = 0;
 	virtual void printData(ostream& o) = 0;
 	virtual ~RFactory() {};
+	virtual void saveTmpResults() {};
 };
 
+struct ParallelRFactory: public RFactory {
+	virtual RNext* getInitial(const Graph* g, int numThreads) = 0;
+};
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
@@ -45,34 +52,7 @@ struct MemoryRNext: public RNext {
 	}
 };
 
-template <class T>
-T **allocMatrix(int rows, int cols) {
-	double** storage = new double*[rows];
-	for (int i=0; i<rows; ++i) {
-		storage[i] = new double[cols];
-	}
-	float totalmem = (rows/1024.0)*(cols/1024.0)*sizeof(double);
-	cerr<<"[allocMatrix] rows="<<rows<<" cols="<<cols<<" ds="<<sizeof(double)<<" mem="<<round(totalmem)<<" MB"<<endl;
-	return storage;
-}
-
-template <class T>
-T **allocMatrix(int size) {
-	return allocMatrix<T>(size, size);
-}
-
-template <class T>
-void freeMatrix(T** matrix, int size) {
-	if (matrix==NULL) return;
-	for (int i=0; i<size; ++i) {
-		delete[] matrix[i];
-	}
-	delete[] matrix;
-}
-
-
-
-struct MemoryRFactory: public RFactory {
+struct MemoryRFactory: public ParallelRFactory {
 	MemoryRNext* rn;
 	MemoryRPrev* rp;
 	int size;
@@ -104,10 +84,114 @@ struct MemoryRFactory: public RFactory {
 		return rn;
 	}
 
+	RNext* getInitial(const Graph* g, int numThreads) {
+		return getInitial(g);
+	}
+
 	RNext* getNext() {
 		double** tmp_storage = rn->storage;
 		rn->storage = rp->storage;
 		rp->storage = tmp_storage;
+		return rn;
+	}
+
+	RPrev* getPrev() {
+		return rp;
+	}
+
+	void printCerr() {
+		printData(cerr);
+	}
+
+	void printData(ostream& o) {
+		double** s = rn->storage;
+		for (int i=0; i<size; ++i) {
+			for (int j=0; j<size; ++j) {
+				o<<s[i][j]<<"\t";
+			}
+			o<<endl;
+		}
+	}
+};
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+
+struct LineMemoryRPrev: public RPrev {
+	double **storage;
+	double get(int row, int col) const {
+		return storage[row][col];
+	}
+};
+
+struct LineMemoryRNext: public RNext {
+	double **storage;
+	int startingrow;
+	int numrows;
+	void set(int row, int col, double val) {
+		storage[row][col] = val;
+	}
+};
+
+struct LineMemoryRFactory: public ParallelRFactory {
+	MemoryRNext* rn;
+	MemoryRPrev* rp;
+	int size;
+	int numlines;
+	int itercounter;
+	FILE* fout;
+
+	LineMemoryRFactory() {
+		this->itercounter = 0;
+		this->size = 0;
+		this->numlines = 0;
+
+		rp = new MemoryRPrev();
+		rp->storage = NULL;
+		rn = new MemoryRNext();
+		rn->storage = NULL;
+		fout = NULL;
+	}
+
+	virtual ~LineMemoryRFactory() {
+		freeMemory();
+	}
+
+	void freeMemory() {
+		freeMatrix(rp->storage, size);
+		freeMatrix(rn->storage, size);
+		rp->storage = NULL;
+		rn->storage = NULL;
+	}
+
+	void reloadOutputFile() {
+		if (fout != NULL) {
+			fclose(f);
+		}
+		fout = fopen((string("LineMemoryRFactory_")+intToStr(itercounter)).c_str(), "w");
+	}
+
+
+	RNext* getInitial(const Graph* g, int numThreads)  {
+		freeMemory();
+		numlines = numThreads;
+		itercounter = 0;
+		size = g->getNumNodes();
+		rp->storage = allocMatrix<double>(size);
+		rn->storage = allocMatrix<double>(this->numlines);
+		return rn;
+	}
+
+	RNext* getNext() {
+		//rn->storage = rp->storage;
+		//rp->storage = tmp_storage;
 		return rn;
 	}
 

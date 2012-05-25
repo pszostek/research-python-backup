@@ -26,6 +26,10 @@ from zbl_tfidflike_process_file import *
 
 from zbl_extract_graph import * 
 
+
+TEMPDIR = tempfile.gettempdir() #place to store temporary results
+
+
 def has_all_fields(record, must_have_fields):
     """Returns True iff record contains all fields."""
     for field in must_have_fields:
@@ -394,7 +398,7 @@ if __name__ == "__main__":
             try:
                 dict_pickle = sys.argv[6]
             except:
-                dict_pickle = str(tempfile.gettempdir())+"/gensim_dict.pickle"
+                dict_pickle = str(TEMPDIR)+"/gensim_dict.pickle"
             try:
                 min_word_freq_in_corpora = int(sys.argv[7])
             except:
@@ -408,7 +412,7 @@ if __name__ == "__main__":
             try:
                 dict_pickle = sys.argv[6]
             except:
-                dict_pickle = str(tempfile.gettempdir())+"/gensim_dict.pickle"
+                dict_pickle = str(TEMPDIR)+"/gensim_dict.pickle"
             try:
                 dst_field = sys.argv[7]
             except:
@@ -417,7 +421,7 @@ if __name__ == "__main__":
             try:
                 tfidf_pickle = sys.argv[4]
             except:
-                tfidf_pickle = str(tempfile.gettempdir())+"/gensim_tfidf_model.pickle"
+                tfidf_pickle = str(TEMPDIR)+"/gensim_tfidf_model.pickle"
             try:
                 src_field = sys.argv[5]
             except:
@@ -426,7 +430,7 @@ if __name__ == "__main__":
             try:
                 tfidf_pickle = sys.argv[4]
             except:
-                tfidf_pickle = str(tempfile.gettempdir())+"/gensim_tfidf_model.pickle"
+                tfidf_pickle = str(TEMPDIR)+"/gensim_tfidf_model.pickle"
             try:
                 src_field = sys.argv[5]
             except:
@@ -447,15 +451,15 @@ if __name__ == "__main__":
             try:
                 dict_pickle = sys.argv[6]
             except:
-                dict_pickle = str(tempfile.gettempdir())+"/gensim_dict.pickle"
+                dict_pickle = str(TEMPDIR)+"/gensim_dict.pickle"
             try:
                 semantic_model_pickle = sys.argv[7]
             except:
-                semantic_model_pickle = str(tempfile.gettempdir())+"/gensim_semantic_model.pickle"            
+                semantic_model_pickle = str(TEMPDIR)+"/gensim_semantic_model.pickle"            
             try:
                 topics_log_path = sys.argv[8]
             except:
-                topics_log_path = str(tempfile.gettempdir())+"/gensim_semantic_model_topics.txt"
+                topics_log_path = str(TEMPDIR)+"/gensim_semantic_model_topics.txt"
         elif cmd == GENSIM_SEMANTIC_MAP:
             try:
                 src_field = sys.argv[4]
@@ -468,12 +472,12 @@ if __name__ == "__main__":
             try:
                 semantic_model_pickle = sys.argv[6]
             except:
-                semantic_model_pickle = str(tempfile.gettempdir())+"/gensim_semantic_model.pickle"
+                semantic_model_pickle = str(TEMPDIR)+"/gensim_semantic_model.pickle"
         elif cmd == MSC_MODEL:
             try:
                 msc_model_pickle = sys.argv[4]
             except:
-                msc_model_pickle = str(tempfile.gettempdir())+"/msc_model.pickle"
+                msc_model_pickle = str(TEMPDIR)+"/msc_model.pickle"
             try:
                 src_field = sys.argv[5]
             except:
@@ -482,7 +486,7 @@ if __name__ == "__main__":
             try:
                 msc_model_pickle = sys.argv[4]
             except:
-                msc_model_pickle = str(tempfile.gettempdir())+"/msc_model.pickle"
+                msc_model_pickle = str(TEMPDIR)+"/msc_model.pickle"
             try:
                 src_field = sys.argv[5]
             except:
@@ -513,7 +517,7 @@ if __name__ == "__main__":
             try:
                 model_pickle = sys.argv[5]
             except:
-                model_pickle = str(tempfile.gettempdir())+"/wd_model.pickle"
+                model_pickle = str(TEMPDIR)+"/wd_model.pickle"
         elif cmd == WD_MAP:
             try:
                 mode = sys.argv[4]
@@ -526,7 +530,7 @@ if __name__ == "__main__":
             try:
                 model_pickle = sys.argv[6]
             except:
-                model_pickle = str(tempfile.gettempdir())+"/wd_model.pickle"
+                model_pickle = str(TEMPDIR)+"/wd_model.pickle"
             try:
                 dst_field = sys.argv[7]
             except:

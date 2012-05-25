@@ -4,7 +4,36 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "simrank_storage.hpp"
+
+
+
+template <class T>
+T **allocMatrix(int rows, int cols) {
+	double** storage = new double*[rows];
+	for (int i=0; i<rows; ++i) {
+		storage[i] = new double[cols];
+	}
+	float totalmem = (rows/1024.0)*(cols/1024.0)*sizeof(double);
+	cerr<<"[allocMatrix] rows="<<rows<<" cols="<<cols<<" ds="<<sizeof(double)<<" mem="<<round(totalmem)<<" MB"<<endl;
+	return storage;
+}
+
+template <class T>
+T **allocMatrix(int size) {
+	return allocMatrix<T>(size, size);
+}
+
+template <class T>
+void freeMatrix(T** matrix, int size) {
+	if (matrix==NULL) return;
+	for (int i=0; i<size; ++i) {
+		delete[] matrix[i];
+	}
+	delete[] matrix;
+}
+
+
+
 
 struct Matrix {
 	vector<string> rows;
