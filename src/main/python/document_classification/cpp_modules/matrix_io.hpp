@@ -4,8 +4,13 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <map>
+#include "strs.hpp"
 
-
+using namespace std;
 
 template <class T>
 T **allocMatrix(int rows, int cols) {
@@ -32,6 +37,25 @@ void freeMatrix(T** matrix, int size) {
 	delete[] matrix;
 }
 
+template <class T>
+void printMatrix(T** simmatrix, ostream& o, int numrows, int numcols) {
+	for (int r=0; r<numrows; ++r) {
+		for (int c=0; c<numcols-1; ++c) {
+			o<<simmatrix[r][c]<<"\t";
+		}
+		o<<simmatrix[r][numcols-1]<<endl;
+	}
+}
+
+
+void printMatrix(double** simmatrix, FILE* f, int numrows, int numcols) {
+	for (int r=0; r<numrows; ++r) {
+		for (int c=0; c<numcols-1; ++c) {
+			fprintf(f, "%lf\t", simmatrix[r][c]);
+		}
+		fprintf(f, "%lf\n", simmatrix[r][numcols-1]);
+	}
+}
 
 
 
@@ -44,25 +68,33 @@ struct Matrix {
 const int MAX_LINE_SIZE = 30*1024*1024;
 static char buffer[MAX_LINE_SIZE];
 
+double** loadMatrixData(FILE* f, double** dst, int numrows, int numcols) {
+	for (int r=0; r<numrows; ++r) {
+		for (int c=0; c<numcols; ++c) {
+			fscanf(f, "%lf", &dst[r][c]);
+		}
+		if (r%1000==0 && r>0) cerr<<"[loadMatrix] row="<<r<<" out of="<<numrows<<endl;
+	}
+	return dst;
+}
+
+char* readLine(FILE* f) {
+	return fgets(buffer, MAX_LINE_SIZE, f);
+}
+
 void loadMatrix(FILE* f, Matrix& m) {
 	char* line;
 	cerr<<"[loadMatrix] loading headers..."<<endl;
 	line = fgets(buffer, MAX_LINE_SIZE, f);
 	m.rows = split(line, '\t');
-	cerr<<"[loadMatrix]"<<m.rows.size()<<" rows to be loaded"<<endl;
+	cerr<<"[loadMatrix]"<<m.rows.size()<<" rows to be loaded..."<<endl;
 
 	line = fgets(buffer, MAX_LINE_SIZE, f);
 	m.cols = split(line, '\t');
-	cerr<<"[loadMatrix]"<<m.cols.size()<<" cols to be loaded"<<endl;
+	cerr<<"[loadMatrix]"<<m.cols.size()<<" cols to be loaded..."<<endl;
 
 	m.data = allocMatrix<double>(m.rows.size(), m.cols.size());
-	for (int r=0; r<m.rows.size(); ++r) {
-		for (int c=0; c<m.cols.size(); ++c) {
-			fscanf(f, "%lf", &m.data[r][c]);
-		}
-		if (r%1000==0) cerr<<"[loadMatrix] row="<<r<<" out of="<<m.rows.size()<<endl;
-	}
-
+	loadMatrixData(f, m.data, m.rows.size(), m.cols.size());
 }
 
 struct Group {

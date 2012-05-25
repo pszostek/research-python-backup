@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include "../graph.hpp"
-#include "../simrank.hpp"
+#include "../simrank/simrank.hpp"
 
 const int DOUBLE_FILE_PRECISION = 10;
 
@@ -28,15 +28,18 @@ int main(int argc, char *argv[]) {
 	cerr<<"Loading graph..."<<endl;
 	Graph g(cin);
 	cerr<<g.node2ix.size()<<" nodes loaded"<<endl;
+	//g.print(cerr);
 	//vector<NodeId> nodes = g.getNodes();
 	//ofstream nodes_file("/tmp/loaded_nodes.txt");
 	//for (int i=0; i <nodes.size(); ++i) nodes_file<<nodes[i]<<endl;
 
 	cerr<<"Calculating simrank..."<<endl;
 	cerr<<"\tC="<<C<<"\tnumIter="<<numIter<<"\tnumThreads="<<numThreads<<endl;
-	MemoryRFactory rFactory;
 	//DummyRFactory rFactory;
+	MemoryRFactory rFactory;
 	simrankParallel(&g, &rFactory, C, numIter, numThreads);
+	//LineMemoryRFactory rFactory;
+	//simrankSingleLineParallel(&g, &rFactory, C, numIter, numThreads);
 
 	cerr<<"Printing out results..."<<endl;
 	g.printLabels(cout);

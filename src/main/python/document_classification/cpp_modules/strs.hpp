@@ -9,7 +9,7 @@
 #include <utility>
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <math.h>
 
 using namespace std;
@@ -72,9 +72,9 @@ int strToInt(const string& str) {
 }
 
 string intToStr(int i) {
-	ostringstream ss;
-	ss << i;
-	return ss.str();
+	  stringstream ss;//create a stringstream
+	  ss << i;//add number to the stream
+	  return ss.str();//return a string with the contents of the stream
 }
 
 
@@ -87,6 +87,14 @@ double strToFloat(const string& str) {
 
 double strToDouble(const string& str) {
 	return strToFloat(str);
+}
+
+void replaceStrLine(char* buf, char src, char dst) {
+	for (char* p=buf; *p!=0 && *p!='\n'; ++p) {
+		if (*p==src) {
+			*p=dst;
+		}
+	}
 }
 
 #endif

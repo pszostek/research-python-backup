@@ -2,7 +2,7 @@
 #ifndef SIMRANK_HPP
 #define SIMRANK_HPP
 
-#include "simrank_parallel_parts.hpp"
+#include "simrank_parallel.hpp"
 
 void simrank(const Graph* g, RFactory* rFactory, double C, int numIter) {
 	cerr<<"[simrank] running sequenced version"<<endl;
@@ -25,17 +25,36 @@ void simrankParallel(const Graph* g, ParallelRFactory* rFactory, double C, int n
 		simrank(g, rFactory, C, numIter);
 		return;
 	}
-	cerr<<"[simrank] running parallel version"<<endl;
+	cerr<<"[simrankParallel] running parallel version"<<endl;
 	RNext* R0 = rFactory->getInitial(g, numThreads);
 	long starttime = time(0);
 	vector<ThreadArgs> targs = prepareThreadsArgs(numThreads, g, C);
 	initR0Parallel(R0, targs);
 
 	for (int it=0; it<numIter; ++it) {
-		cerr<<"[simrank]["<<(time(0)-starttime)<<"s] iteration no "<<it<<" started"<<endl;
+		cerr<<"[simrankParallel]["<<(time(0)-starttime)<<"s] iteration no "<<it<<" started"<<endl;
 		RNext* Rn = rFactory->getNext();
 		RPrev* Rp = rFactory->getPrev();
 		calcRnextParallel(Rp, Rn, targs);
+	}
+
+	clearThreadArgs(targs);
+};
+
+
+
+void simrankSingleLineParallel(const Graph* g, LineMemoryRFactory* rFactory, double C, int numIter, int numThreads=1) {
+	cerr<<"[simrankLineStorage] running parallel version"<<endl;
+	LineMemoryRNext* R0 = rFactory->getInitial(g, numThreads);
+	long starttime = time(0);
+	vector<ThreadArgs> targs = prepareThreadsArgs(numThreads, g, C);
+	initR0SingeLineParallel(R0, targs);
+
+	for (int it=0; it<numIter; ++it) {
+		cerr<<"[simrankLineStorage]["<<(time(0)-starttime)<<"s] iteration no "<<it<<" started"<<endl;
+		LineMemoryRNext* Rn = rFactory->getNext();
+		LineMemoryRPrev* Rp = rFactory->getPrev();
+		calcRnextSingeLineParallel(Rp, Rn, targs);
 	}
 
 	clearThreadArgs(targs);

@@ -1,7 +1,7 @@
 #ifndef SIMRANK_BASIC
 #define SIMRANK_BASIC
 
-#include "graph.hpp"
+#include "../graph.hpp"
 #include "simrank_storage.hpp"
 #include <ctime>
 #include <cmath>
@@ -42,7 +42,8 @@ void calcRnext(const Graph* g, RPrev* Rp, RNext* Rn, double C,
 	if (end_a < 0) end_a = g->getNumNodes();
 	if (end_b < 0) end_b = g->getNumNodes();
 	int range_size = (end_a-start_a); //debug
-	int bigstep_size = range_size/20; //debug
+	int bigstep_size = range_size/20+1; //debug
+	//cerr<<"[simrank] calcRnext start_a="<<start_a<<" end_a="<<end_a<<" start_b="<<start_b<<" end_b="<<end_b<<" Rprev="<<Rp<<" RNext="<<Rn<<endl;
 	for (int a=start_a; a<end_a; ++a) {
 		if ( (a-start_a)%bigstep_size == 0) { //debug
 			cerr<<"[calcRnext] progress:"<<((a-start_a)*100/range_size)<<"%"<<endl;

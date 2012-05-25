@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	cerr<<"[aggregate_simmatrix]Printing matrix to stdout..."<<endl;
+	cerr<<"[aggregate_simmatrix]Printing matrix to cout..."<<endl;
 	for (int g=0; g<groups.size()-1; ++g) {
 		cout<<groups[g].name<<"\t";
 	}
@@ -106,11 +106,6 @@ int main(int argc, char *argv[]) {
 		cout<<groups[g].name<<"\t";
 	}
 	cout<<groups.back().name<<endl;
-	for (int r=0; r<groups.size(); ++r) {
-		for (int c=0; c<groups.size()-1; ++c) {
-			cout<<simmatrix[r][c]<<"\t";
-		}
-		cout<<simmatrix[r][groups.size()-1]<<endl;
-	}
+	printMatrix(simmatrix, cout, groups.size(), groups.size());
 
 }

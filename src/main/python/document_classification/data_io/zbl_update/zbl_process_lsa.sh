@@ -12,8 +12,6 @@ else
 fi
 
 echo "----------------------------------------"
-mkdir models_lsa$3
-echo "----------------------------------------"
 #converting words into ids
 python zbl_process_file.py -gensim_dict ti,ut,ab < $1
 echo "----------------------------------------"
@@ -29,7 +27,9 @@ python zbl_process_file.py -gensim_lsa $3 < /tmp/zbl_filtered_stemmed_g1.zbl.txt
 echo "----------------------------------------"
 python zbl_process_file.py -gensim_lmap < /tmp/zbl_filtered_stemmed_g1.zbl.txt > $2
 echo "----------------------------------------"
-cp /tmp/*.pickle models_lsa$3
-cp /tmp/gensim_semantic_model_topics.txt models_lsa$3
+mkdir models_lsa$3
+echo "----------------------------------------"
+mv /tmp/*.pickle models_lsa$3
+mv /tmp/gensim_semantic_model_topics.txt models_lsa$3
 echo "----------------------------------------"
 
