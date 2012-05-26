@@ -51,9 +51,9 @@ void printMatrix(T** simmatrix, ostream& o, int numrows, int numcols) {
 void printMatrix(double** simmatrix, FILE* f, int numrows, int numcols) {
 	for (int r=0; r<numrows; ++r) {
 		for (int c=0; c<numcols-1; ++c) {
-			fprintf(f, "%lf\t", simmatrix[r][c]);
+			fprintf(f, "%.12f\t", simmatrix[r][c]);
 		}
-		fprintf(f, "%lf\n", simmatrix[r][numcols-1]);
+		fprintf(f, "%.12f\n", simmatrix[r][numcols-1]);
 	}
 }
 
@@ -71,7 +71,7 @@ static char buffer[MAX_LINE_SIZE];
 double** loadMatrixData(FILE* f, double** dst, int numrows, int numcols) {
 	for (int r=0; r<numrows; ++r) {
 		for (int c=0; c<numcols; ++c) {
-			fscanf(f, "%lf", &dst[r][c]);
+			int numscanned = fscanf(f, "%lf", &dst[r][c]);
 		}
 		if (r%1000==0 && r>0) cerr<<"[loadMatrix] row="<<r<<" out of="<<numrows<<endl;
 	}
@@ -82,15 +82,18 @@ char* readLine(FILE* f) {
 	return fgets(buffer, MAX_LINE_SIZE, f);
 }
 
-void loadMatrix(FILE* f, Matrix& m) {
+vector<string> loadHeaderLine(FILE* f) {
 	char* line;
-	cerr<<"[loadMatrix] loading headers..."<<endl;
 	line = fgets(buffer, MAX_LINE_SIZE, f);
-	m.rows = split(line, '\t');
-	cerr<<"[loadMatrix]"<<m.rows.size()<<" rows to be loaded..."<<endl;
+	return split(line, '\t');
+}
 
-	line = fgets(buffer, MAX_LINE_SIZE, f);
-	m.cols = split(line, '\t');
+void loadMatrix(FILE* f, Matrix& m) {
+	cerr<<"[loadMatrix] loading headers..."<<endl;
+
+	m.rows = loadHeaderLine(f);
+	cerr<<"[loadMatrix]"<<m.rows.size()<<" rows to be loaded..."<<endl;
+	m.cols = loadHeaderLine(f);
 	cerr<<"[loadMatrix]"<<m.cols.size()<<" cols to be loaded..."<<endl;
 
 	m.data = allocMatrix<double>(m.rows.size(), m.cols.size());
