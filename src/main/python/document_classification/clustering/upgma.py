@@ -25,7 +25,7 @@ def upgma(dmatrix, k, agreggation_method = 'a'):
 
     hidden_node_ix = 0 #biezacy nr ukrytego wezla    
     toplevel_nodes = set(ids)
-    for node in tree:
+    for node in tree:        
         if len(toplevel_nodes) <= k: break             
         #dodaj wezel ukryty zlozony z dwoch juz istniejacych
         hidden_node_ix = hidden_node_ix - 1 
@@ -42,6 +42,7 @@ def upgma(dmatrix, k, agreggation_method = 'a'):
         pnodes[hidden_node_ix] = Bio.Phylo.BaseTree.Clade(name=hidden_node_ix, clades=[left_node, right_node])
         pheight[hidden_node_ix] = node.distance/2
         
+    #print "[UPGMA] NUMCLUSTERS=",len(toplevel_nodes)," k=",k
     return [Bio.Phylo.BaseTree.Tree(root=pnodes[node_id], rooted=True) for node_id in toplevel_nodes]
 
 

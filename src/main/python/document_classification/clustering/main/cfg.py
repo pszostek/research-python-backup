@@ -27,13 +27,20 @@ mscmsc_calculate_sample_size = lambda n: 100000 #ile par dokument x dokument dla
 
 #CLUSTERING:
 similarity_aggregator_method_l = "avg" #cpp version: avg/sl/avgw
-similarity_aggregator_m = matrix_avg_U #should work on matrix
-#clustering_l = lambda sim: kmedoids.kmedoids_clustering(sim, 30, 10000) 
-#clustering_m = lambda sim: kmedoids.kmedoids_clustering(sim, 10, 10000) 
-#clustering_l = lambda sim: upgma.upgma_clustering(sim, sqrt((len(sim)/2+1)), agreggation_method = 'a') 
-#clustering_m = lambda sim: upgma.upgma_clustering(sim, sqrt((len(sim)/2+1)), agreggation_method = 'a') 
-clustering_l = lambda sim: upgma.upgma_clustering(sim, 30, agreggation_method = 'a') 
-clustering_m = lambda sim: upgma.upgma_clustering(sim, 50, agreggation_method = 'a') 
+similarity_aggregator_m = matrix_avg_U #matrix_avg_U #should work on matrix
+
+#clustering_l_k = lambda sim,k: kmedoids.kmedoids_clustering(sim, k, 10000) 
+#clustering_m_k = lambda sim,k: kmedoids.kmedoids_clustering(sim, k, 10000) 
+clustering_l_k = lambda sim,k: upgma.upgma_clustering(sim, k, agreggation_method = 'a') 
+clustering_m_k = lambda sim,k: upgma.upgma_clustering(sim, k, agreggation_method = 'a')
+
+clustering_l = lambda sim: clustering_l_k(sim, int( round( sqrt(len(sim)/2.0) ) ) ) 
+clustering_m = lambda sim: clustering_m_k(sim, int( round( sqrt(len(sim)/2.0) ) ) )
+
+clusters_l_kvalues = lambda num_leaves: range(10, 250, 10)
+clusters_m_kvalues = lambda num_leaves: range(10, 250, 10)
+ 
+
 #SIMILARITY CACLULATIONS:    
 bonding_calc = lambda common_levels: common_levels
 membership_calc = lambda common_levels: common_levels/2.0

@@ -111,9 +111,17 @@ def __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix):
 ##############################################################################
 ##############################################################################
 
+def _get_lm_for_max_simixs(lmclusters2ixs, simixno):
+    maxval = max(simixs[simixno] for lm, simixs in lmclusters2ixs.iteritems())
+    for lm, simixs in lmclusters2ixs.iteritems():
+        if simixs[simixno] == maxval:
+            return lm, simixs        
+    return None
+
+
                 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    #logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     try:
         zbl_path = sys.argv[1]
     except:
@@ -154,42 +162,60 @@ if __name__ == "__main__":
     #sim_matrix_l = __python_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix)
     sim_matrix_l = __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix)     
     __report_simmatrix_routine__("sim_matrix_l", sim_matrix_l)
-
-    print "--------------------------------------------------------"    
-    print "Building MSC tree out of", len(set(msc2ix.keys())), "leaves..."    
-    msc_leaf2clusters, msc_tree = trees.build_msctree_leaf2clusters(msc2ix, msc2ix)
     
-    #MSC
-    #new_leaf2clusters, new_tree = msc_leaf2clusters, msc_tree
-    
-    #RAND
-    #new_leaf2clusters, new_tree = random_tree.get_random_tree_leaf2clusters(msc2ix.values())
+    #if 1==1:
+    #    if 1==1:
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARN)
+    lmclusters2ixs = {}
+    for num_m_clusters in clusters_m_kvalues(len(msc2ix)):
+        for num_l_clusters in clusters_l_kvalues(len(msc2ix)):
+            if num_l_clusters<num_m_clusters: continue                    
+            print "#############################################################################"
+            print "CONSIDERING num_l_clusters=",num_l_clusters," num_m_clusters=",num_m_clusters
+            clustering_l = lambda sim: clustering_l_k(sim, num_l_clusters) 
+            clustering_m = lambda sim: clustering_m_k(sim, num_m_clusters)
 
-    #3level-tree
-    new_leaf2clusters, new_tree = tree_clustering.generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m)                 
+            print "--------------------------------------------------------"    
+            print "Building MSC tree out of", len(set(msc2ix.keys())), "leaves..."    
+            msc_leaf2clusters, msc_tree = trees.build_msctree_leaf2clusters(msc2ix, msc2ix)
+            
+            #MSC
+            #new_leaf2clusters, new_tree = msc_leaf2clusters, msc_tree
+            
+            #RAND
+            #new_leaf2clusters, new_tree = random_tree.get_random_tree_leaf2clusters(msc2ix.values())
         
-    #UPGMA
-    #new_tree = tree_clustering.generate_upgma_tree(sim_matrix_l, agreggation_method = 'a')     
-    #new_leaf2clusters = trees.bottomup2topdown_tree_converter(new_tree)
-    
-    print " new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))#[:400]
-    
-    print "--------------------------------------------------------"
-    print "--------------------------------------------------------"
-    print "Calculating similarity indexes..."
-    comparision_result = tree_distance.get_indexes_dict(msc_leaf2clusters, new_leaf2clusters, \
-                                            bonding_calc, membership_calc, membership_bonding,\
-                                            only_fast_sim_calculations)
-    print " *******************************************"
-    print " comparision results=",comparision_result
-    
-    print "--------------------------------------------------------"
-    print "Calculating boding out of new tree..."
-    new_B = B_using_tree_l2c(new_leaf2clusters, bonding_calc)    
-    print "bonding=",str(new_B)[:200]
-    print " storing new_tree bonding matrix to",NEWTREE_BONDING_PATH
-    matrix_io.fwrite_smatrix(new_B, msc_list, msc_list, NEWTREE_BONDING_PATH)        
+            #3level-tree
+            new_leaf2clusters, new_tree = tree_clustering.generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m)                 
+                
+            #UPGMA
+            #new_tree = tree_clustering.generate_upgma_tree(sim_matrix_l, agreggation_method = 's')     
+            #new_leaf2clusters = trees.bottomup2topdown_tree_converter(new_tree)
+            
+            print " new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))[:400]
+            
+            print "--------------------------------------------------------"
+            print "--------------------------------------------------------"
+            print "Calculating similarity indexes..."
+            comparision_result = tree_distance.get_indexes_dict(msc_leaf2clusters, new_leaf2clusters, \
+                                                    bonding_calc, membership_calc, membership_bonding,\
+                                                    only_fast_sim_calculations)
+            print " *******************************************"
+            print " comparision results=",comparision_result
+            print str(comparision_result.values()).replace(",","\t").replace(" ","")
+            lmclusters2ixs[(num_l_clusters, num_m_clusters)] = comparision_result.values()
+            
+            #print "--------------------------------------------------------"
+            #print "Calculating boding out of new tree..."
+            #new_B = B_using_tree_l2c(new_leaf2clusters, bonding_calc)    
+            #print "bonding=",str(new_B)[:200]
+            #print " storing new_tree bonding matrix to",NEWTREE_BONDING_PATH
+            #matrix_io.fwrite_smatrix(new_B, msc_list, msc_list, NEWTREE_BONDING_PATH)        
 
-    
+    print "############################################################################"
+    print "Best configuration for simindex=0:",_get_lm_for_max_simixs(lmclusters2ixs, 0)
+    print "Best configuration for simindex=1:",_get_lm_for_max_simixs(lmclusters2ixs, 1)
+    print "Best configuration for simindex=2:",_get_lm_for_max_simixs(lmclusters2ixs, 2)
+    print "Best configuration for simindex=3:",_get_lm_for_max_simixs(lmclusters2ixs, 3)
  
     
