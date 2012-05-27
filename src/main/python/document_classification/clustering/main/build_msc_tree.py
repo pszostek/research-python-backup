@@ -118,10 +118,12 @@ def _get_lm_for_max_simixs(lmclusters2ixs, simixno):
             return lm, simixs        
     return None
 
+def _fo_(obj):
+    return str(obj).replace(",","\t").replace(" ","")
 
                 
 if __name__ == "__main__":
-    #logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     try:
         zbl_path = sys.argv[1]
     except:
@@ -202,7 +204,7 @@ if __name__ == "__main__":
                                                     only_fast_sim_calculations)
             print " *******************************************"
             print " comparision results=",comparision_result
-            print str(comparision_result.values()).replace(",","\t").replace(" ","")
+            print _fo_(comparision_result.values())
             lmclusters2ixs[(num_l_clusters, num_m_clusters)] = comparision_result.values()
             
             #print "--------------------------------------------------------"
@@ -213,9 +215,9 @@ if __name__ == "__main__":
             #matrix_io.fwrite_smatrix(new_B, msc_list, msc_list, NEWTREE_BONDING_PATH)        
 
     print "############################################################################"
-    print "Best configuration for simindex=0:",_get_lm_for_max_simixs(lmclusters2ixs, 0)
-    print "Best configuration for simindex=1:",_get_lm_for_max_simixs(lmclusters2ixs, 1)
-    print "Best configuration for simindex=2:",_get_lm_for_max_simixs(lmclusters2ixs, 2)
-    print "Best configuration for simindex=3:",_get_lm_for_max_simixs(lmclusters2ixs, 3)
+    print "Best configuration for simindex=0:",_fo_(_get_lm_for_max_simixs(lmclusters2ixs, 0))
+    print "Best configuration for simindex=1:",_fo_(_get_lm_for_max_simixs(lmclusters2ixs, 1))
+    print "Best configuration for simindex=2:",_fo_(_get_lm_for_max_simixs(lmclusters2ixs, 2))
+    print "Best configuration for simindex=3:",_fo_(_get_lm_for_max_simixs(lmclusters2ixs, 3))
  
     
