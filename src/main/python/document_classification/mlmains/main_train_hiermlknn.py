@@ -21,7 +21,6 @@ from tools.msc_processing import get_labels_min_occurence
 #for mlknn
 from mlknn.mlknn import MlKnn
 from mlknn.find_closest_points import find_closest_points
-from mlknn.jaccard_distance import JaccardDistance
 from mltools.ml_hierarchical import MlHierarchical
 
 def PRINTER(x):
@@ -70,6 +69,12 @@ if __name__ == '__main__':
         print '8th argument expected: load_test_generator parameter'
         sys.exit(1)
     
+    try:
+        distancetype = sys.argv[9]
+    except:
+        print '9th argument expected: type of distance. Available: jac, g0, g1, g2'
+        sys.exit(1)
+        
     PRINTER("Loading the input data...")
     from tools.pickle_tools import read_pickle
     train_generator_list = read_pickle(load_train_generator_path) 
@@ -78,8 +83,14 @@ if __name__ == '__main__':
     
     train_generator = lambda: train_generator_list
     #train mlknn:
-    PRINTER("Training Distance...")
-    zbldistance = JaccardDistance(train_generator, elements_count-int(elements_count/10), distancetrainingsteps)
+    PRINTER("training distance...")
+    train_generator = lambda: train_generator_list
+    if distancetype=='jac':
+        from mlknn.jaccard_distance import JaccardDistance
+        zbldistance = JaccardDistance(train_generator, elements_count-int(elements_count/10), distancetrainingsteps)
+    else:
+        from mlknn.txt_cosine_distance import TxtCosineDistance 
+        zbldistance = TxtCosineDistance(distancetype)
     
     get_labels_of_record = mc2lmc_tomka_blad
     mlknn_callable = lambda train_gen, get_labels_of_record_arg: MlKnn(train_gen, zbldistance, find_closest_points, 

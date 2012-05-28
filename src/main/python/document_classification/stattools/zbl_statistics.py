@@ -7,7 +7,7 @@ Created on Dec 17, 2011
 from __future__ import division 
 import sys
 sys.path.append(r'../')
-from data_io.zbl_record_generators import gen_lmc
+from data_io.zbl_record_generators import gen_lmc, gen_record
 from tools import msc_processing
 from tools.msc_processing import count_msc_occurences
 
@@ -36,8 +36,6 @@ def contains2of_diff_prefix(lmc, num):
             return True
     return False
 
-    
-
 def count_label_statistics(fname, fields):
     """
     Counts the following statistics and prints them. 
@@ -63,7 +61,7 @@ def count_label_statistics(fname, fields):
     bolo21 = 0
     bolo22 = 0
     #count statistics
-    for lmc in gen_lmc(fname, fields):
+    for lmc in gen_lmc(lambda: gen_record(fname, fields), fields):
         all+=1
         for mc in lmc:
             labels.add(mc)
@@ -77,6 +75,7 @@ def count_label_statistics(fname, fields):
             bolo21 += 1
         if contains2of_diff_prefix(lmc, 3):
             bolo22 += 1
+        print '[count_label_statistics]: lmc:', lmc, contains2of_same_prefix(lmc, 2), contains2of_same_prefix(lmc, 3), contains2of_diff_prefix(lmc, 2), contains2of_diff_prefix(lmc, 3)
         
     #print statistics
     print "lc:", lc/all

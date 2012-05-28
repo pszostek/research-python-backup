@@ -19,14 +19,14 @@ from split_train_test_highest import split_train_test_highest
 from data_io.zbl_record_generators import mc2lmc_tomka_blad, gen_lmc
 from tools.msc_processing import get_labels_min_occurence
 #for mlknn
-from mlknn.mlknn_fractional import MlKnnFractional
+from mlknn.mlknn_ensembled_fractional import MlKnnFractionalEnsembledStrongest
 from mlknn.find_closest_points import find_closest_points
 from mlknn.mlknn_adjust_thresholds import mlknn_adjust_thresholds
 from mlknn.jaccard_distance import JaccardDistance
 
 def PRINTER(x):
-    logging.info('[main_train_mlknn][main]: '+str(x))
-    #print '[main_train_mlknn][main]: '+str(x)
+    logging.info('[main_train_mlknn_ensembled_fractional][main]: '+str(x))
+    #print '[main_train_mlknn_ensembled_fractional][main]: '+str(x)
 
 if __name__ == '__main__':
     try:
@@ -49,23 +49,26 @@ if __name__ == '__main__':
     except:
         print '4th argument expected: path to where a classifier is to be saved'
         sys.exit(1)
+    
     try:
-        k = int(sys.argv[5])
+        distancetrainingsteps = int(sys.argv[5])
     except:
-        print '5th argument expected: k parameter'
-        sys.exit(1)
-    try:
-        distancetrainingsteps = int(sys.argv[6])
-    except:
-        print '6th argument expected: number of steps in training to be performed'
+        print '5th argument expected: number of steps in training to be performed'
         sys.exit(1)
     
     try:
-        distancetype = sys.argv[7]
+        distancetype = sys.argv[6]
     except:
-        print '7th argument expected: type of distance. Available: jac, g0, g1, g2'
+        print '6th argument expected: type of distance. Available: jac, g0, g1, g2'
         sys.exit(1)
         
+    try:
+        k_list = map(int, sys.argv[7:])
+        PRINTER("List of k: "+str(k_list))
+    except:
+        print '7th argument expected: list of k '
+        sys.exit(1)
+    
     PRINTER('Loading training list...')
     from tools.pickle_tools import read_pickle
     train_generator_list = read_pickle(load_train_generator_path)
@@ -90,8 +93,8 @@ if __name__ == '__main__':
     PRINTER("Training MLKNN...")
     from time import time
     start = time()
-    mlknn_single = MlKnnFractional(train_generator, zbldistance, find_closest_points, 
-                         k, get_labels_of_record)
+    mlknn_single = MlKnnFractionalEnsembledStrongest(train_generator, zbldistance, find_closest_points, 
+                         k_list, get_labels_of_record)
     PRINTER("Time taken for training:"+str(start-time()))
     
     from tools.pickle_tools import save_pickle

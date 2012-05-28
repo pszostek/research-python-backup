@@ -22,7 +22,6 @@ from tools.msc_processing import get_labels_min_occurence
 from mlknn.mlknn import MlKnn
 from mlknn.find_closest_points import find_closest_points
 from mlknn.mlknn_adjust_thresholds import mlknn_adjust_thresholds
-from mlknn.jaccard_distance import JaccardDistance
 
 def PRINTER(x):
     logging.info('[main_train_mlknn][main]: '+str(x))
@@ -65,6 +64,13 @@ if __name__ == '__main__':
         print '7th argument expected: number of steps in training to be performed'
         sys.exit(1)
     
+    try:
+        distancetype = sys.argv[8]
+    except:
+        print '8th argument expected: type of distance. Available: jac, g0, g1, g2'
+        sys.exit(1)
+        
+    
     PRINTER('Loading training list...')
     from tools.pickle_tools import read_pickle
     all_train_generator_list = read_pickle(load_train_generator_path)
@@ -83,8 +89,13 @@ if __name__ == '__main__':
     
     PRINTER("training distance...")
     train_generator = lambda: train_generator_list
-    zbldistance = JaccardDistance(train_generator, elements_count-int(elements_count/10), distancetrainingsteps)
-    
+    if distancetype=='jac':
+        from mlknn.jaccard_distance import JaccardDistance
+        zbldistance = JaccardDistance(train_generator, elements_count-int(elements_count/10), distancetrainingsteps)
+    else:
+        from mlknn.txt_cosine_distance import TxtCosineDistance 
+        zbldistance = TxtCosineDistance(distancetype)
+        
     PRINTER("Finding label list...")
     get_labels_of_record = mc2lmc_tomka_blad
     find_all_labels = lambda frecords: get_labels_min_occurence(lambda: gen_lmc(frecords), 1)
@@ -93,7 +104,7 @@ if __name__ == '__main__':
     from time import time
     start = time()
     mlknn_single = MlKnn(train_generator, zbldistance, find_closest_points, 
-                         k, smoothingparam, find_all_labels, get_labels_of_record)
+                         k, smoothingparam, get_labels_of_record)
     PRINTER("Time taken for training:"+str(start-time()))
     
     #PRINTER("MLKNN: training thresholds on validation set...")

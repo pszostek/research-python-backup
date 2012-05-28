@@ -60,9 +60,14 @@ if __name__ == '__main__':
         print '6th argument expected: distancetrainingsteps parameter'
         sys.exit(1)
     try:
-        load_test_generator = sys.argv[8]
+        load_test_generator = sys.argv[7]
     except:
-        print '8th argument expected: load_test_generator parameter'
+        print '7th argument expected: load_test_generator parameter'
+        sys.exit(1)
+    try:
+        distancetype = sys.argv[8]
+    except:
+        print '8th argument expected: type of distance. Available: jac, g0, g1, g2'
         sys.exit(1)
     
     PRINTER("Loading the input data.")
@@ -73,8 +78,15 @@ if __name__ == '__main__':
     
     train_generator = lambda: train_generator_list
     #train mlknn:
-    PRINTER("Training Distance...")
-    zbldistance = JaccardDistance(train_generator, elements_count-int(elements_count/10), distancetrainingsteps)
+    PRINTER("training distance...")
+    train_generator = lambda: train_generator_list
+    if distancetype=='jac':
+        from mlknn.jaccard_distance import JaccardDistance
+        zbldistance = JaccardDistance(train_generator, elements_count-int(elements_count/10), distancetrainingsteps)
+    else:
+        from mlknn.txt_cosine_distance import TxtCosineDistance 
+        zbldistance = TxtCosineDistance(distancetype)
+        
     
     get_labels_of_record = mc2lmc_tomka_blad
     mlknn_callable = lambda train_gen, get_labels_of_record_arg: MlKnnFractional(train_gen, zbldistance, find_closest_points, 
@@ -104,5 +116,5 @@ if __name__ == '__main__':
                     {'full label': lambda x: x, 'half label': lambda x: x[:3], 'low label': lambda x: x[:2]}, labels)
     
     
-    from tools.pickle_tools import save_pickle
-    save_pickle(hierarhical_mlknn, save_classifier_path)
+    #from tools.pickle_tools import save_pickle
+    #save_pickle(hierarhical_mlknn, save_classifier_path)

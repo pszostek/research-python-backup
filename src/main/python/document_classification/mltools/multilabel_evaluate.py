@@ -203,7 +203,7 @@ def multilabel_evaluate_printresults(test_generator, classify_oracle, classify_t
         PRINTER_ONSCREEN("Hammingloss: "+str(hammingloss[i]))
         PRINTER_ONSCREEN("Subset01loss: "+str(subset01loss[i]))
     
-    PRINTER_ONSCREEN("=====================================================")
+    """PRINTER_ONSCREEN("=====================================================")
     PRINTER_ONSCREEN("=================Errors on labels====================")
     PRINTER_ONSCREEN("=====================================================")
     
@@ -215,4 +215,4 @@ def multilabel_evaluate_printresults(test_generator, classify_oracle, classify_t
             PRINTER_ONSCREEN("\tFP: "+str(labeldict['FP']))
             PRINTER_ONSCREEN("\tTN: "+str(labeldict['TN']))
             PRINTER_ONSCREEN("\tFN: "+str(labeldict['FN']))
-            
+       """     
