@@ -27,47 +27,47 @@ class MlKnn(object):
     '''
 
 
-    def __init__(self, frecords, distance, find_closest_points, k, 
-                 smoothing_param, get_labels_of_record):
+    def __init__(self, tobjects, distance, find_closest_points, k, smoothing_param, get_labels_of_record):
         '''
         Constructor.
         
-        @type frecords: list of records
-        @param frecords: used to calculate parameters (probabilities)
-            and nearest neighbours amongst the records it returns;
+        @type tobjects: list of training objects
+        @param tobjects: used to calculate parameters (probabilities)
+            and nearest neighbours amongst the training objects it returns;
             NOTE: if a user wants to manipulate, which codes to consider(e.g. higher or lower level) 
-            it is good to give a specific frecords parameter
+            it is good to give a specific tobjects parameter
             
         @type distance: object that contains a method of signature: distance(rec1, rec2)
-        @param distance: returns distance measure between 2 records
+        @param distance: returns distance measure between rec1 and rec2
         
         @type find_closest_points: function of signature:
-            find_closest_points(sample, records, excluding, how_many, distance)
-        @param distance: finding closest points,
+            find_closest_points(sample, objects, excluding, how_many, distance)
+        @param distance: finding closest points for sample amongst the objects,
         
         @type k: integer
         @param k: no. of neighbours taken into consideration
         
         @type k: smoothing_param
-        @param smoothing_param - min number of occurences of each label
+        @param smoothing_param - min number of occurences of each label = as in the algorithm
         
         @type get_labels_of_record: function
         @param get_labels_of_record: returns list of labels assigned to a record
         
         '''
-        self.frecords = list(frecords())
+        self.tobjects = tobjects#list(tobjects())
         self.distance = distance
         self.find_closest_points = find_closest_points
         self.k = k
         self.smoothing_param = smoothing_param
         self.get_labels_of_record = get_labels_of_record
-        self.labels = find_all_labels(self.frecords, self.get_labels_of_record)
+        self.labels = find_all_labels(self.tobjects, self.get_labels_of_record)
         PRINTER('[MlKnn: init] labels: '+str(self.labels))
         self.threshold = self.init_zero_thresholds(self.labels)
         #compute the probabilities:
         self.labelprobabilities, self.labelcounterprobabilities = self.__get_label_probabilities()
         self.posteriorprobabilities = self.__get_posterior_probabilities()
     
+    #-------------------------------------------TRAINING-----------------------------------------------#
     def init_zero_thresholds(self, labels):
         '''
         Initialize a dictionary, mapping each label into 0.
@@ -83,10 +83,10 @@ class MlKnn(object):
         
         TESTED.
         '''
-        d = {}
+        d = {}#label probabilities
         elems_cnt = 0
         
-        for r in self.frecords:
+        for r in self.tobjects:
             for code in self.get_labels_of_record(r):
                 try:
                     d[code]+=1
@@ -94,7 +94,7 @@ class MlKnn(object):
                     d[code]=1+self.smoothing_param
             elems_cnt+=1
         
-        df = {}
+        df = {}#label counter probabilities
         for k, v in d.iteritems():
             d[k] = v/(self.smoothing_param*2 + elems_cnt)
             df[k] = 1-d[k]
@@ -122,7 +122,7 @@ class MlKnn(object):
         
         #for each record compute
         elem_cnt = 0
-        for r in self.frecords:
+        for r in self.tobjects:
             labels_codes = self.get_labels_of_record(r)
             #print "labels_codes:", labels_codes
             elem_cnt+=1
@@ -137,24 +137,15 @@ class MlKnn(object):
                 d[code]+=1
             for code in self.labels:
                 if code in labels_codes:
-                    #PRINTER("[Mlknn.__get_posterior_probabilities]: adding to c: "+str(code)+" "+ str(d[code]))
                     if d[code] <= self.k:
                         c[code][d[code]] += 1
                     else:
                         c[code][self.k+1] += 1
-                        #print "code in c: ", code in c
-                        #print "c: ", c
-                        #print "self.k: ", self.k
-                        #print "self.classify_stupid(r): ", self.classify_stupid(r)
-                        #exit(1)
                 else:
                     if d[code] <= self.k:
                         c_prim[code][d[code]] += 1
                     else:
                         c_prim[code][self.k+1] += 1
-        
-        #print "c:", c
-        #print "c_prim:", c_prim
         
         #compute the final values:
         peh = {}
@@ -207,32 +198,25 @@ class MlKnn(object):
         '''
         answer = []
         neigh_codes = self.count_neighbours_per_code(sample)
-                
         #for each code determine wether it is describing the sample or not:
         for code in self.labels:
-            
             tproba, fproba = self.get_unnormalized_probabilities_for_class(sample, code, neigh_codes.get(code, 0))
-            #print "true:", tproba
-            #print "false:", fproba
-            #TODO: zrobic tutaj tproba/fproba > trained_value_on_validation_set
+            #IDEA: zrobic tutaj tproba/fproba > trained_value_on_validation_set
             if tproba>fproba+self.threshold[code]:
                 answer.append(code)
-            
         return answer
             
     def classify_stupid_raw(self, sample):
         '''
         Classify element using KNN without use of precomputed probabilities. Return closest points.
         Note: user is supposed to extract labels by himself.
-        
         '''
-        return self.find_closest_points(sample, self.frecords, [sample], self.k, self.distance.distance)
+        return self.find_closest_points(sample, self.tobjects, [sample], self.k, self.distance.distance)
 
     def classify_stupid(self, sample):
         '''
         Classify element using KNN without use of precomputed probabilities. Return labels of closest points.
         Note: codes may occur several times, which is REQUIRED from this method if this reflects the truth.
-        
         '''
         labels_assigned = self.classify_stupid_raw(sample)
         if len(labels_assigned)==0:
@@ -244,17 +228,14 @@ class MlKnn(object):
         Classify element using KNN without use of precomputed probabilities and without excluding any points
         from the training set. Return closest points.
         Note: user is supposed to extract labels by himself.
-        
         '''
-        
-        return self.find_closest_points(sample, self.frecords, [], self.k, self.distance.distance)
+        return self.find_closest_points(sample, self.tobjects, [], self.k, self.distance.distance)
 
     def classify_stupid_no_exclude(self, sample):
         '''
         Classify element using KNN without use of precomputed probabilities and without excluding any points. 
         Return labels of closest points.
         Note: codes may occur several times, which is REQUIRED from this method if this reflects the truth.
-        
         '''
         closest_samples = self.classify_stupid_raw_no_exclude(sample)
         return reduce(lambda a, b: a+b, map(lambda x: self.get_labels_of_record(x), closest_samples))

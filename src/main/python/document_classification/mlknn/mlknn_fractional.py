@@ -28,19 +28,19 @@ class MlKnnFractional(object):
     calculate a priori and a posteriori probabilities.
     '''
 
-    def __init__(self, frecords, distance, find_closest_points, k, 
+    def __init__(self, tobjects, distance, find_closest_points, k, 
                  get_labels_of_record):
         '''
         Constructor.
         
-        @type frecords: list of records
-        @param frecords: used to calculate parameters (probabilities)
+        @type tobjects: list of records
+        @param tobjects: used to calculate parameters (probabilities)
             and nearest neighbours amongst the records it returns;
             NOTE: if a user wants to manipulate, which codes to consider(e.g. higher or lower level) 
-            it is good to give a specific frecords parameter
+            it is good to give a specific tobjects parameter
             
         @type distance: object that contains a method of signature: distance(rec1, rec2)
-        @param distance: returns distance measure between 2 records
+        @param distance: returns distance measure between rec1 and rec2
         
         @type find_closest_points: function of signature:
             find_closest_points(sample, records, excluding, how_many, distance)
@@ -53,19 +53,18 @@ class MlKnnFractional(object):
         @param get_labels_of_record: returns list of labels assigned to a record
         
         '''
-        self.frecords = list(frecords())
+        self.tobjects = tobjects()
         self.distance = distance
         self.find_closest_points = find_closest_points
         self.k = k
         self.get_labels_of_record = get_labels_of_record
-        self.list_of_all_labels = find_all_labels(self.frecords, self.get_labels_of_record)
-        print '[MlKnnFractional: init] labels: '+str(self.list_of_all_labels)
+        self.list_of_all_labels = find_all_labels(self.tobjects, self.get_labels_of_record)
         
         #compute the counts:
-        
         self.c, self.c_prim = self.__calculate_label_counts()
-        self.fraction_knn_thresholds = self.__calculate_thresholds()
-        print '[MlKnnFractional: init] self.fraction_knn_thresholds:', self.fraction_knn_thresholds
+        self.fraction_knn_thresholds, self.fmeasure_per_class = self.__calculate_thresholds()
+        #print '[MlKnnFractional: init] '+str(k)+', self.fraction_knn_thresholds: ', self.fraction_knn_thresholds
+        #print '[MlKnnFractional: init] '+str(k)+', self.fmeasure_per_class: ', self.fmeasure_per_class
         
     def __calculate_label_counts(self):
         '''
@@ -86,7 +85,7 @@ class MlKnnFractional(object):
         
         #for each record compute
         elem_cnt = 0
-        for r in self.frecords:
+        for r in self.tobjects:
             labels_codes = self.get_labels_of_record(r)
             #print "labels_codes:", labels_codes
             elem_cnt+=1
@@ -184,7 +183,7 @@ class MlKnnFractional(object):
             fmeasure_per_class[label] = best_fmeasure  
             precision_per_class[label] = best_fmeasures_precision  
             recall_per_class[label] = best_fmeasures_recall
-        return fraction_knn_thresholds
+        return fraction_knn_thresholds, fmeasure_per_class
 
     def count_neighbours_per_code(self, sample):
         '''
@@ -220,7 +219,7 @@ class MlKnnFractional(object):
         Note: user is supposed to extract labels by himself.
         
         '''
-        return self.find_closest_points(sample, self.frecords, [sample], self.k, self.distance.distance)
+        return self.find_closest_points(sample, self.tobjects, [sample], self.k, self.distance.distance)
 
     def classify_stupid(self, sample):
         '''
@@ -241,7 +240,7 @@ class MlKnnFractional(object):
         
         '''
         
-        return self.find_closest_points(sample, self.frecords, [], self.k, self.distance.distance)
+        return self.find_closest_points(sample, self.tobjects, [], self.k, self.distance.distance)
 
     def classify_stupid_no_exclude(self, sample):
         '''
