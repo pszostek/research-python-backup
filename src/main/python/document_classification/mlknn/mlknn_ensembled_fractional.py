@@ -17,6 +17,8 @@ def PRINTER(x):
 
 class MlKnnFractionalEnsembledStrongest(object):
     '''
+    @deprecated: use MlknnTEnsembled instead.
+    
     Naive Bayes with KNN as features.
     
     Modification of a classifier based on a publication: 
@@ -36,8 +38,7 @@ class MlKnnFractionalEnsembledStrongest(object):
     elements. Now the time will linearly grow as the list of k's grows.
     '''
 
-    def __init__(self, frecords, distance, find_closest_points, k_list, 
-                 get_labels_of_record):
+    def __init__(self, frecords, distance, find_closest_points, k_list, get_labels_of_record):
         '''
         Constructor.
         

@@ -4,7 +4,7 @@ Created on May 23, 2012
 @author: mlukasik
 '''
 import unittest
-import mlknn_skeleton
+import mlknn_skeleton, mlknn
 import find_closest_points_sorted
 
 def merge_lists(lists):
@@ -43,9 +43,20 @@ class Test(unittest.TestCase):
         mk = mlknn_skeleton.MlknnSkeleton()
         
         c, c_prim = mk.calculate_label_counts(lrecords, labels, get_neighbours, get_labels, lambda i: 1, printer)
-        #print "c:", c
-        #print "c_prim:", c_prim
         
+        import find_closest_points
+        smoothing_param = 1
+        mk2 = mlknn.MlKnn(lrecords, A(), find_closest_points.find_closest_points, 
+                         k, smoothing_param, get_labels)
+        c2 = mk2.c
+        c_prim2 = mk2.c_prim 
+        for i in set(c.iterkeys()) | set(c2.iterkeys()):
+             for j in set(c[i].iterkeys()) | set(c2[i].iterkeys()):
+                 self.assertEqual(c[i].get(i, 0), c2[i].get(i, 0))
+        for i in set(c_prim.iterkeys()) | set(c_prim2.iterkeys()):
+             for j in set(c[i].iterkeys()) | set(c2[i].iterkeys()):
+                 self.assertEqual(c_prim[i].get(i, 0), c_prim2[i].get(i, 0))
+                 
         self.assertEqual(c['a'][1], 2)
         self.assertEqual(c['b'][0], 1)
         self.assertEqual(c['c'][1], 2)

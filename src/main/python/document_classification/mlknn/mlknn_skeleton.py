@@ -17,7 +17,7 @@ class MlknnSkeleton(object):
     def find_all_labels(self, tobjects, get_labels):
         return find_all_labels.find_all_labels(tobjects, get_labels)
     
-    def calculate_label_counts(self, tobjects, labels, find_nearest_neighbours, get_labels, kernel, printer):
+    def calculate_label_counts(self, tobjects, labels, find_nearest_neighbours, k, get_labels, kernel, printer):
         '''
         Calculate label counts in neighbourhood in the training set.
         (Leave one out method).
@@ -58,7 +58,7 @@ class MlknnSkeleton(object):
             rlabels = get_labels(r)
             d = {}
 
-            for ind, neighbhour in enumerate(find_nearest_neighbours(r)):
+            for ind, neighbhour in enumerate(find_nearest_neighbours(r, k)):
                 for label in get_labels(neighbhour):
                     d[label] = d.get(label, 0)+kernel(ind)
             for code in labels:
@@ -70,7 +70,7 @@ class MlknnSkeleton(object):
 
         return c, c_prim
 
-    def count_neighbours_per_code(self, sample, find_nearest_neighbours, get_labels, kernel):
+    def count_neighbours_per_code(self, sample, find_nearest_neighbours, k, get_labels, kernel):
         '''
         Counts number of neighbours amongst the k nearest neighbours per a code.
         
@@ -78,7 +78,7 @@ class MlknnSkeleton(object):
         @param kernel: returns the importance measure of a neighour of given ordinal number
         '''
         neigh_labels = {}
-        for ind, neighbhour in enumerate(find_nearest_neighbours(sample)):
+        for ind, neighbhour in enumerate(find_nearest_neighbours(sample, k)):
             for label in get_labels(neighbhour):
                 neigh_labels[label] = neigh_labels.get(label, 0)+kernel(ind)
         return neigh_labels

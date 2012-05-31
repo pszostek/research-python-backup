@@ -5,7 +5,7 @@ Created on Dec 27, 2011
 '''
 from __future__ import division
 import unittest
-import mlknn_basic, find_closest_points_sorted
+import mlknn_threshold, find_closest_points_sorted
 
 #import os, sys
 #lib_path = os.path.abspath(os.path.sep.join(['..', '..', '..', 'document_classification']))
@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
         def printer(x):
             pass
         
-        mk = mlknn_basic.MlknnBasic(lrecords, get_neighbours, k, smoothing_param, get_labels_of_record, lambda x:1, printer)
+        mk = mlknn_threshold.MlknnThreshold(lrecords, get_neighbours, k, smoothing_param, get_labels_of_record, lambda x:1, printer)
         
         return mk
 
@@ -78,60 +78,12 @@ class Test(unittest.TestCase):
         def printer(x):
             pass
         
-        import find_closest_points, mlknn
+        import find_closest_points, mlknn_fractional
         smoothing_param = 1
-        mk2 = mlknn.MlKnn(lrecords, A(), find_closest_points.find_closest_points, 
-                         k, smoothing_param, get_labels_of_record)
+        mk2 = mlknn_fractional.MlKnnFractional(lambda: lrecords, A(), find_closest_points.find_closest_points, 
+                         k, get_labels_of_record)
         return mk2
 
-    def testGetLabelProbabilities(self):
-        mk = self.build_mk()
-        d = {'a': (1+4)/(1*2+7),'b': (1+3)/(1*2+7), 
-             'd':(1+1)/(1*2+7), 'e':(1+1)/(1*2+7), 'f':(1+1)/(1*2+7), 
-             'g':(2+1)/(1*2+7), 'h':(1+1)/(1*2+7)}
-        self.assertEqual(dict(mk.labelprobabilities), d)
-        
-        df = {}
-        for k in d:
-            df[k] = 1-d[k]
-        self.assertEqual(dict(mk.labelcounterprobabilities), df)
-        
-    def testGetPosteriorProbabilities(self):
-        mk = self.build_mk()
-        
-        dt = {'a': {0: 0.3333333333333333, 
-                   1: 0.3333333333333333, 
-                   2: 0.16666666666666666, 
-                   3: 0.16666666666666666}}
-        
-        df = {'a': {0: 0.16666666666666666, 
-                   1: 0.3333333333333333, 
-                   2: 0.3333333333333333, 
-                   3: 0.16666666666666666}}
-        
-        mk_old = self.build_mlknn_old()
-        
-        #print "[testGetPosteriorProbabilities] printing the posterior probabilities: MLKNN and MLKNN_basic"
-        for key1 in sorted( set(mk.posteriorprobabilities_true.keys()) | set(mk_old.posteriorprobabilities.keys()) ):
-            #print "-",key1
-            for key2 in sorted( set(mk.posteriorprobabilities_true[key1].keys()) | set(mk_old.posteriorprobabilities[key1].keys()) ):
-                #print "--",key2
-                #print "---",mk_old.posteriorprobabilities[key1][key2][True], mk.posteriorprobabilities_true[key1].get(key2, 0)
-                self.assertEqual(mk_old.posteriorprobabilities[key1][key2][False], mk.posteriorprobabilities_false[key1].get(key2, 0))
-        
-        #print "[testGetPosteriorProbabilities] printing the posterior probabilities: MLKNN and MLKNN_basic"
-        for key1 in sorted( set(mk.posteriorprobabilities_false.keys()) | set(mk_old.posteriorprobabilities.keys()) ):
-            #print "-",key1
-            for key2 in sorted( set(mk.posteriorprobabilities_false[key1].keys()) | set(mk_old.posteriorprobabilities[key1].keys()) ):
-                #print "--",key2
-                #print "---",mk_old.posteriorprobabilities[key1][key2][False], mk.posteriorprobabilities_false[key1].get(key2, 0)
-                self.assertEqual(mk_old.posteriorprobabilities[key1][key2][False], mk.posteriorprobabilities_false[key1].get(key2, 0))
-        
-        #print "[MLKNN_BASIC]: dict(mk.posteriorprobabilities_true):", dict(mk.posteriorprobabilities_true)
-        #print "[MLKNN_BASIC]: self.assertEqual(dict(mk.posteriorprobabilities_false):", dict(mk.posteriorprobabilities_false)
-        #print "[MLKNN]: mk_old.posteriorprobabilities:", mk_old.posteriorprobabilities
-        #self.assertEqual(dict(mk.posteriorprobabilities_true)['a'], dt['a'])
-        #self.assertEqual(dict(mk.posteriorprobabilities_false)['a'], df['a'])  
     def testClassify(self):
         mk = self.build_mk()
         mk_old = self.build_mlknn_old()

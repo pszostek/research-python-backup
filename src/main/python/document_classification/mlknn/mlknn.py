@@ -157,9 +157,12 @@ class MlKnn(object):
         for code in self.labels:
             sum_c = sum(c[code].itervalues())
             sum_c_prim = sum(c_prim[code].itervalues())
+            #print "[MLKNN]: code:", code, "sum_c", sum_c, "sum_c_prim:", sum_c_prim
             for i in xrange(self.k+2):
                 peh[code][i][True] = (self.smoothing_param + c[code][i])/(self.smoothing_param * (self.k + 2) + sum_c)
+                #print "i:", i, "peh[code][i][True]:", peh[code][i][True]
                 peh[code][i][False] = (self.smoothing_param + c_prim[code][i])/(self.smoothing_param * (self.k + 2) + sum_c_prim) 
+                #print "i:", i, "peh[code][i][False]:", peh[code][i][False]
         
         #save the counts to the classifier, so that it is possible to investigate the 
         #properties of these counts

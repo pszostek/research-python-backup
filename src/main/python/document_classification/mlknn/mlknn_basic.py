@@ -19,7 +19,8 @@ class MlknnBasic(mlknn_skeleton.MlknnSkeleton):
     '''
 
 
-    def __init__(self, tobjects, find_nearest_neighbours, k, smoothing_param, get_labels, kernel, printer):
+    def __init__(self, tobjects, find_nearest_neighbours, k, smoothing_param, get_labels, kernel, printer, 
+                 neigh_events = None):#range(k+2)):
         '''
         Constructor.
         
@@ -55,6 +56,9 @@ class MlknnBasic(mlknn_skeleton.MlknnSkeleton):
         self.get_labels = get_labels
         self.kernel = kernel
         self.printer = printer
+        self.neigh_events = range(k+2)#neigh_events
+        if neigh_events:
+            self.neigh_events = neigh_events
         
         #find labels:
         self.labels = super(MlknnBasic, self).find_all_labels(self.tobjects, self.get_labels)
@@ -63,9 +67,9 @@ class MlknnBasic(mlknn_skeleton.MlknnSkeleton):
         #compute the probabilities:
         self.labelprobabilities, self.labelcounterprobabilities = self.__get_label_probabilities()
         c, c_prim = super(MlknnBasic, self).calculate_label_counts(self.tobjects, self.labels, 
-                                                                   self.find_nearest_neighbours,
+                                                                   self.find_nearest_neighbours, self.k,
                                                                    self.get_labels, self.kernel, self.printer)
-        print "[MlknnBasic] c, c_prim:", c, c_prim
+        #print "[MlknnBasic] c, c_prim:", c, c_prim
         self.posteriorprobabilities_true, self.posteriorprobabilities_false = self.__get_posterior_probabilities(c, c_prim)
 
 #-------------------------------------------TRAINING-----------------------------------------------#
@@ -103,11 +107,15 @@ class MlknnBasic(mlknn_skeleton.MlknnSkeleton):
         for code in self.labels:
             sum_c = sum(c[code].itervalues())
             sum_c_prim = sum(c_prim[code].itervalues())
-            for i in c[code].iterkeys():
-                peh_true[code][i] = (self.smoothing_param + c[code][i])/(self.smoothing_param * (self.k + 2) + sum_c)
-            for i in c_prim[code].iterkeys():
-                peh_false[code][i] = (self.smoothing_param + c_prim[code][i])/(self.smoothing_param * (self.k + 2) + sum_c_prim) 
-        
+            #print "[MLKNN_BASIC]: code:", code, "sum_c", sum_c, "sum_c_prim:", sum_c_prim
+            for i in self.neigh_events:#c[code].iterkeys():
+                peh_true[code][i] = (self.smoothing_param + c[code].get(i, 0))/(self.smoothing_param * (self.k + 2) + sum_c)
+                #print "i:", i, "peh_true[code][i]:", peh_true[code][i]
+            #for i in c_prim[code].iterkeys():
+                peh_false[code][i] = (self.smoothing_param + c_prim[code].get(i, 0))/(self.smoothing_param * (self.k + 2) + sum_c_prim) 
+                #print "i:", i, "peh_true[code][i]:", peh_true[code][i]
+                #print "i:", i, "peh_false[code][i]:", peh_false[code][i]
+            
         return peh_true, peh_false
     
 #-------------------------------------------CLASSIFYING-----------------------------------------------#
@@ -126,11 +134,12 @@ class MlknnBasic(mlknn_skeleton.MlknnSkeleton):
         Classify sample using KNN with use of precomputed probabilities. Return labels of closest points.
         '''
         result = []
-        neighs_per_code = self.count_neighbours_per_code(sample)
+        neighs_per_code = super(MlknnBasic, self).count_neighbours_per_code(sample, self.find_nearest_neighbours, self.k, 
+                                                                            self.get_labels, self.kernel)
         #for each code determine wether it is describing the sample or not:
         for code in self.labels:
             tproba, fproba = self.get_unnormalized_probabilities_for_class(sample, code, neighs_per_code.get(code, 0))
-            #IDEA: zrobic tutaj tproba/fproba > trained_value_on_validation_set
+            #IDEA: mozna zrobic tutaj tproba/fproba > trained_value_on_validation_set
             if tproba>fproba:
                 result.append(code)
         return result

@@ -16,6 +16,8 @@ def PRINTER(x):
 
 class MlKnnFractional(object):
     '''
+    @deprecated: use MlknnThreshold instead.
+    
     Naive Bayes with KNN as features.
     
     Modification of a classifier based on a publication: 
