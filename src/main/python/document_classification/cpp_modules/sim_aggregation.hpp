@@ -1,8 +1,11 @@
 
+
+
 #ifndef SIM_AGGREGATION
 #define SIM_AGGREGATION
 
 #include <cmath>
+#include "matrix_io.hpp"
 
 inline bool custom_isnan(double var) {
     volatile double d = var;
@@ -21,6 +24,10 @@ double sim_aggregation_avg_noweights(const Group& g1, const Group& g2, double** 
 	return total_sim / g1.ixs.size() / g2.ixs.size();
 }
 
+double sim_aggregation_avg_link(const Group& g1, const Group& g2, double** simmatrix) {
+	return sim_aggregation_avg_noweights(g1, g2, simmatrix);
+}
+
 double sim_aggregation_single_link(const Group& g1, const Group& g2, double** simmatrix) {
 	double currentmax = 0.0;
 	for (int i=0; i<g1.ixs.size(); ++i) {
@@ -31,6 +38,18 @@ double sim_aggregation_single_link(const Group& g1, const Group& g2, double** si
 		}
 	}
 	return currentmax;
+}
+
+double sim_aggregation_complete_link(const Group& g1, const Group& g2, double** simmatrix) {
+	double currentmin = 0.0;
+	for (int i=0; i<g1.ixs.size(); ++i) {
+		int ix1 = g1.ixs[i];
+		for (int j=0; j<g2.ixs.size(); ++j) {
+			int ix2 = g2.ixs[j];
+			currentmin = min(simmatrix[ix1][ix2], currentmin);
+		}
+	}
+	return currentmin;
 }
 
 
@@ -44,9 +63,9 @@ double sim_aggregation_avg_mul(const Group& g1, const Group& g2, double** simmat
 		for (int j=0; j<g2.ixs.size(); ++j) {
 			int ix2 = g2.ixs[j];
 
-			float weight = g1.weights[i]*g2.weights[i];
-			total_sim += weight*simmatrix[ix1][ix2];
-			total_weights += weight;
+			float weight 	= g1.weights[i]*g2.weights[i];
+			total_sim 		+= weight*simmatrix[ix1][ix2];
+			total_weights 	+= weight;
 		}
 	}
 

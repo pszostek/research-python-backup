@@ -19,7 +19,7 @@ def get_indexes_report(leaf2clusters, leaf2clusters2, \
     Bf_RI= Bf_ARI= Bf_JI= Bm_RI= Bm_ARI= Bm_JI= C_RI= C_ARI= C_JI= Hm_RI= Hf_RI= Bt_RI = -1.0
         
     ####################################################################
-    logging.info("[get_indexes_report] ======================================")    
+    logging.info("[get_indexes_report] --------------------------")    
     logging.info("[get_indexes_report] Brouwer_treestructure_B1B2")
              
     B1,B2,leaf2ix = Brouwer_treestructure_B1B2(leaf2clusters, leaf2clusters2, \
@@ -32,7 +32,7 @@ def get_indexes_report(leaf2clusters, leaf2clusters2, \
     Bf_RI, Bf_ARI, Bf_JI = simindexes.calc_base_indexes(a,b,c,d)
             
     ####################################################################
-    logging.info("[get_indexes_report] ======================================")
+    logging.info("[get_indexes_report] --------------------------")
     logging.info("[get_indexes_report] Hullermeier path")
     
     #print "Hullermeier"
@@ -42,14 +42,14 @@ def get_indexes_report(leaf2clusters, leaf2clusters2, \
     if only_fast_calculations:
         return Bf_RI, Bf_ARI, Bf_JI, Bm_RI, Bm_ARI, Bm_JI, C_RI, C_ARI, C_JI, Hm_RI, Hf_RI, Bt_RI        
     ####################################################################
-    logging.info("[get_indexes_report] ======================================")
+    logging.info("[get_indexes_report] --------------------------")
     logging.info("[get_indexes_report] Hullermeier membership")    
     Hm_RI = HRI_membership(leaf2clusters, leaf2clusters2, \
                                           membership_calc, membership_bonding)     
 
     ####################################################################
     ####################################################################
-    logging.info("[get_indexes_report] ======================================")
+    logging.info("[get_indexes_report] --------------------------")
     logging.info("[get_indexes_report] Brouwer_treestructure_tau=min")            
                 
     a,b,c,d = Brouwer_abcd(B1, B2, \
@@ -61,7 +61,7 @@ def get_indexes_report(leaf2clusters, leaf2clusters2, \
     # print " numapairs->",len(leaf2ix)*(len(leaf2ix)-1)/2
     # simindexes.report_indexes(a,b,c,d)
     ####################################################################
-    logging.info("[get_indexes_report] ======================================")
+    logging.info("[get_indexes_report] --------------------------")
     logging.info("[get_indexes_report] Brouwer_membership_B1B2")
     
     #M_dict = M_dictionary(T, membership_calc)
@@ -83,7 +83,7 @@ def get_indexes_report(leaf2clusters, leaf2clusters2, \
     ####################################################################
     return Bf_RI, Bf_ARI, Bf_JI, Bm_RI, Bm_ARI, Bm_JI, C_RI, C_ARI, C_JI, Hm_RI, Hf_RI, Bt_RI        
     ####################################################################
-    logging.info("[get_indexes_report] ======================================")
+    logging.info("[get_indexes_report] --------------------------")
     logging.info("[get_indexes_report] Campello_VXYZ")
 
     (V,X,Y,Z),leaf2ix = Campello_VXYZ(leaf2clusters, leaf2clusters2,

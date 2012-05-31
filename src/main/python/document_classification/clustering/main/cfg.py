@@ -1,5 +1,6 @@
 
 import sys,os
+import tempfile   
 sys.path.append(r'../')
 sys.path.append(r'../../')
 sys.path.append(r'../../../')
@@ -19,26 +20,19 @@ import kmedoids
 
 #CODES PREFILTERING:
 MIN_COUNT_MSC = 0 #ile minimalnie dokumentow zeby zachowac klase
-MIN_COUNT_MSCPRIM = 10
+MIN_COUNT_MSCPRIM = 3
 MIN_COUNT_MSCSEC = 0
 
 #SAMPLING OF CODES REPRESENTATIONS:    
 mscmsc_calculate_sample_size = lambda n: 100000 #ile par dokument x dokument dla kazdego z msc x msc    
 
 #CLUSTERING:
-similarity_aggregator_method_l = "avg" #cpp version: avg/sl/avgw
-similarity_aggregator_m = matrix_avg_U #matrix_avg_U #should work on matrix
+tree_method = "3lupgma"
+similarity_aggregation_method_l = "a" #cpp version: a/s/avgw/m
+similarity_aggregation_method_m = "a" 
 
-clustering_l_k = lambda sim,k: kmedoids.kmedoids_clustering(sim, k, 10000) 
-clustering_m_k = lambda sim,k: kmedoids.kmedoids_clustering(sim, k, 10000) 
-#clustering_l_k = lambda sim,k: upgma.upgma_clustering(sim, k, agreggation_method = 'm') 
-#clustering_m_k = lambda sim,k: upgma.upgma_clustering(sim, k, agreggation_method = 'm')
-
-#clustering_l = lambda sim: clustering_l_k(sim, int( round( sqrt(len(sim)/2.0) ) ) ) 
-#clustering_m = lambda sim: clustering_m_k(sim, int( round( sqrt(len(sim)/2.0) ) ) )
-
-clusters_l_kvalues = lambda num_leaves: [40]#range(10, 250, 10) #[30]
-clusters_m_kvalues = lambda num_leaves: [30]#range(10, 250, 10) #[30]
+clusters_l_kvalues = lambda num_leaves: [5]#[25, 30, 45, 40, 50, 70, 100, 150, 170, 200, 250]#range(10, 250, 10) #[30]
+clusters_m_kvalues = lambda num_leaves: [2]#[15, 20, 30, 35, 50, 70, 100, 150, 200, 250]#range(10, 250, 10) #[30]
 
 
 #SIMILARITY CACLULATIONS:    
@@ -48,7 +42,8 @@ membership_bonding = angular_bonding
 only_fast_sim_calculations = True 
 
 
-NEWTREE_BONDING_PATH = "/tmp/newtree_bonding.txt"
 
+TMPDIR = tempfile.gettempdir();
+NEWTREE_BONDING_PATH = TMPDIR+"/newtree_bonding.txt"
 
             

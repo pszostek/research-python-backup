@@ -26,26 +26,26 @@ import numpy
 
 def generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m):
     """Returns 3level tree generated using similarity matrix=sim_matrix_l, given clustering methods and similarity matrix aggregation method."""            
-    logging.info("--------------------------------------------------------")
-    logging.info("Clustering L-level (xxyzz) (method:"+str(clustering_l)+")...")
+    #logging.info("[generate_3level_tree] --------------------------------------------------------")
+    logging.info("[generate_3level_tree] Clustering L-level (xxyzz) (method:"+str(clustering_l)+")...")
     assignment_l = clustering_l(sim_matrix_l)
     #sil =  silhouettes(sim_matrix_l, range(2,len(sim_matrix_l),1), upgma.upgma_clustering, f=avgmax)
     #sil2 = dict( (s,k) for k,s in sil.iteritems() )
-    logging.info("\tassignment_l = "+str(assignment_l)[:200])        
+    logging.info("[generate_3level_tree] assignment_l = "+str(assignment_l)[:200])        
     
-    logging.info("--------------------------------------------------------")
-    logging.info("Aggregating similarity matrix on M-level (aggregator:"+str(similarity_aggregator_m)+")...")
+    #logging.info("[generate_3level_tree] --------------------------------------------------------")
+    logging.info("[generate_3level_tree] Aggregating similarity matrix on M-level (aggregator:"+str(similarity_aggregator_m)+")...")
     sim_matrix_m = sim_matrix.aggregate_similarity_matrix_a(sim_matrix_l, assignment_l, similarity_aggregator_m)
-    logging.info(" sim_matrix_m of size "+str(len(sim_matrix_m))+"x"+str(len(sim_matrix_m[0])))
-    logging.info(str(numpy.array(sim_matrix_m))[:500])
+    logging.info("[generate_3level_tree]  sim_matrix_m of size "+str(len(sim_matrix_m))+"x"+str(len(sim_matrix_m[0])))
+    logging.info("[generate_3level_tree] \n"+str(numpy.array(sim_matrix_m))[:500])
 
-    logging.info("--------------------------------------------------------")
-    logging.info("Clustering M-level (xxy) (method:"+str(clustering_m)+")...")
+    #logging.info("[generate_3level_tree] --------------------------------------------------------")
+    logging.info("[generate_3level_tree] Clustering M-level (xxy) (method:"+str(clustering_m)+")...")
     assignment_m = clustering_m(sim_matrix_m)
-    logging.info("\tassignment_m = "+str(assignment_m)[:200])
+    logging.info("[generate_3level_tree] assignment_m = "+str(assignment_m)[:200])
 
-    logging.info("--------------------------------------------------------")
-    logging.info("Building 3level tree with assignment_l and assignment_m")
+    #logging.info("[generate_3level_tree] --------------------------------------------------------")
+    logging.info("[generate_3level_tree] Building 3level tree with assignment_l and assignment_m")
     new_tree = trees.build_3level_tree(assignment_l, assignment_m)
     new_leaf2clusters = trees.bottomup2topdown_tree_converter(new_tree)
     
@@ -53,8 +53,13 @@ def generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, cl
 
 
 def generate_upgma_tree(similarity_matrix, agreggation_method = 'a'):
-    """Returns tree generated using give simialrity_matrix and aggregation_method (for details see: Bio.Cluster.treecluster)."""
-    dmatrix = [[1.0-sim for sim in row] for row in similarity_matrix]     
+    """Returns tree generated using give simialrity_matrix and aggregation_method (for details see: Bio.Cluster.treecluster)."""    
+    logging.info("[generate_upgma_tree] clustering agreggation_method="+str(agreggation_method))
+    #similarity -> distances
+    dmatrix             = [[1.0-sim for sim in row] for row in similarity_matrix]
+    if agreggation_method == 's': agreggation_method = 'm'
+    elif agreggation_method == 'm': agreggation_method = 's'
+         
     ids = range(len(dmatrix))    
     tree = Bio.Cluster.treecluster(distancematrix = array(dmatrix), method = agreggation_method) #wyliczenie drzewa
 

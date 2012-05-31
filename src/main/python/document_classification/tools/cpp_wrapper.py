@@ -23,8 +23,6 @@ def run_exec(mpath, args = [], instream=sys.stdin, outstream=sys.stdout, errstre
 
         
 
-AGG_SIM_GROUP2WIXS_LIST_PATH = "/tmp/AGG_SIM_GROUP2WIXS_LIST_PATH.txt"
-
 def aggregate_simmatrix(srcmatrixpath, dstmatrixpath, group2wids_list, method="avg"):    
     """
     Aggregates similarity matrix.
@@ -34,9 +32,11 @@ def aggregate_simmatrix(srcmatrixpath, dstmatrixpath, group2wids_list, method="a
     group2wids_list - list of pairs (group-name, list of pairs (group-element-index, weight) )
     method - avg=average/sl=single link/avgw=weighted average
     """
-    logging.info("[aggregate_simmatrix] src="+srcmatrixpath+" dst="+dstmatrixpath+" method="+method+" group2wids_list="+str(group2wids_list)[:50])
-    aux_io.store_group2wids_list(open(AGG_SIM_GROUP2WIXS_LIST_PATH, "w"), group2wids_list)
+    groups_tmp_file_path = dstmatrixpath+".groups"
+    logging.info("[aggregate_simmatrix] src="+srcmatrixpath+" dst="+dstmatrixpath)
+    logging.info("[aggregate_simmatrix] method='"+method+"' group2wids_list="+str(group2wids_list)[:100])
+    aux_io.store_group2wids_list(open(groups_tmp_file_path, "w"), group2wids_list)
     fin = open(srcmatrixpath)
     fout = open(dstmatrixpath, "w")
-    return run_exec("../cpp_modules/main/aggregate_simmatrix", args = [AGG_SIM_GROUP2WIXS_LIST_PATH, method], instream=fin, outstream=fout)
+    return run_exec("../cpp_modules/main/aggregate_simmatrix", args = [groups_tmp_file_path, method], instream=fin, outstream=fout)
 

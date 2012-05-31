@@ -30,9 +30,10 @@ def fread_smatrix(path, datareader=__read_ftabs__, rowlength=lambda rowno,numcol
     data = []
     for rowno,rowlabel in enumerate(rows):
         if rowno>=maxrows: break
-        if rowno%500==0: logging.info("[fread_smatrix] "+str(rowno)+"rows loaded.")        
+        if rowno%500==0: logging.info("[fread_smatrix] "+str(rowno)+" rows loaded.")        
         row = datareader(f)
         data.append(row[:rowlength(rowno, len(row))])
+    logging.info("[fread_smatrix] "+str(rowno)+" rows loaded.")
     f.close()
     return (rows, cols, data)
 

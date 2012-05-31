@@ -4,12 +4,18 @@ sys.path.append(r'../')
 import data_io
 from data_io import matrix_io
 from tools import matlab_wrapper
+import logging
 
 TMP_INPATH = "/tmp/kmedoids_simmatrix.txt"
 TMP_OUTPATH = "/tmp/kmedoids_assignment.txt"
 
 def kmedoids_clustering(similarity_matrix, k, maxits = 1000000):
     """Takes symmetric similarity matrix (list of lists) and returns list: assignment to clusters."""
+    logging.info("[kmedoids_clustering] clustering objects="+str(len(similarity_matrix))+" k="+str(k))
+    if len(similarity_matrix) <= k:        
+        logging.warn("[kmedoids_clustering] objects="+str(len(similarity_matrix))+" is no more than clusters="+str(k)+"!")
+        return range(0, len(similarity_matrix))
+    
     labels = list( i for i in xrange(len(similarity_matrix)) )    
     matrix_io.fwrite_smatrix(similarity_matrix, labels, labels, TMP_INPATH)
     if matlab_wrapper.run_matlab("../clustering/kmedoids_matlab/kmedoids.m", [TMP_INPATH, (k), (maxits), TMP_OUTPATH]) != 0:

@@ -11,9 +11,14 @@ import Bio
 from Bio import Cluster
 import numpy  
 
+import logging
+
 
 def upgma(dmatrix, k, agreggation_method = 'a'):
     """Retruns k binary biopython trees built using hierarchical clustering (Bio.Cluster.treecluster mode: agreggation_method)."""
+    logging.info("[upgma] building tree out of distances. agreggation_method="+agreggation_method)
+    #replacing similarity with distances
+    
     ids = range(len(dmatrix))    
     tree = Bio.Cluster.treecluster(distancematrix = array(dmatrix), method = agreggation_method) #wyliczenie drzewa
 
@@ -60,7 +65,12 @@ def extract_leaves(biotree):
         
 
 def upgma_clustering(similarity_matrix, k, agreggation_method = 'a'):    
-    dmatrix = [[1.0-sim for sim in row] for row in similarity_matrix]    
+    logging.info("[upgma_clustering] clustering objects="+str(len(similarity_matrix))+" k="+str(k)+" agreggation_method="+agreggation_method)
+    #replacing similarity with distances
+    dmatrix = [[1.0-sim for sim in row] for row in similarity_matrix]
+    if agreggation_method == 's': agreggation_method = 'm'
+    elif agreggation_method == 'm': agreggation_method = 's'
+    
     clusters = upgma(dmatrix, k, agreggation_method)
     assignment = range(len(similarity_matrix))
     for clustno,clusttree in enumerate(clusters): 
