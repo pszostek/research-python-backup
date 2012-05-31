@@ -98,9 +98,9 @@ def ____validate_cpp_output____(msc2ix, rows):
         
 
 def __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix):
-    msc2wids_list = get_msc2wids_list_primarymsc(msc2ix, mscmodel)
     dstmatrixpath = TMPDIR+"/mlevel_similarity_matrix_"+similarity_aggregation_method_l+"_"+base64.b16encode(aux.quick_md5(sim_matrix_path+similarity_aggregation_method_l+str(MIN_COUNT_MSCPRIM)))
     if not aux.exists(dstmatrixpath):
+        msc2wids_list = get_msc2wids_list_primarymsc(msc2ix, mscmodel)
         cpp_wrapper.aggregate_simmatrix(sim_matrix_path, dstmatrixpath, msc2wids_list, method=similarity_aggregation_method_l)
     logging.info("[build_msc_tree] Loading simmatrix from: "+str(dstmatrixpath))            
     (rows, cols, sim_matrix_l) = matrix_io.fread_smatrix(dstmatrixpath)
@@ -112,11 +112,9 @@ def __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix):
 ##############################################################################
 
 def _get_lm_for_max_simixs(lmclusters2ixs, simixno):
-    maxval = max(simixs[simixno] for lm, simixs in lmclusters2ixs.iteritems())
-    for lm, simixs in lmclusters2ixs.iteritems():
-        if simixs[simixno] == maxval:
-            return lm, simixs        
-    return None
+    (maxval,lm) = max( (simixs[simixno],lm) for lm, simixs in lmclusters2ixs.iteritems())
+    return lm        
+    
 
 def _fo_(obj):
     return str(obj).replace(",","\t").replace(" ","")
@@ -126,23 +124,24 @@ def _fo_(obj):
 ##############################################################################
 ##############################################################################        
                 
-if __name__ == "__main__":
+def main(argv):    
+    sys.stderr = sys.stdout
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     try:
-        zbl_path = sys.argv[1]
+        zbl_path = argv[1]
     except:
         print "[build_msc_tree] Argument expected: zbl-file-path."
         sys.exit(-1)
     try:
-        sim_matrix_path = sys.argv[2]
+        sim_matrix_path = argv[2]
     except:
         print "[build_msc_tree] Argument exepected: similarity-matrix"
         sys.exit(-1)
                  
     try:
-        method = sys.argv[3]
+        method = argv[3]
         method_parts = method.split('-')
-        tree_method = method_parts[0]
+        clustering_method = method_parts[0]
         
         try:
             similarity_aggregation_method_l = method_parts[1]
@@ -181,10 +180,13 @@ if __name__ == "__main__":
     print "[build_msc_tree] MIN_COUNT_MSC =",MIN_COUNT_MSC
     print "[build_msc_tree] MIN_COUNT_MSCPRIM =",MIN_COUNT_MSCPRIM
     print "[build_msc_tree] MIN_COUNT_MSCSEC =",MIN_COUNT_MSCSEC
-    print "[build_msc_tree] tree_method =", tree_method
+    print "[build_msc_tree] clustering_method =", clustering_method
     print "[build_msc_tree] similarity_aggregation_method_l =", similarity_aggregation_method_l
     print "[build_msc_tree] similarity_aggregation_method_m =", similarity_aggregation_method_m
     print "[build_msc_tree] similarity_aggregator_m =",similarity_aggregator_m    
+    print "[build_msc_tree] numiterations =",numiterations 
+    print "[build_msc_tree] l_clusters_range =",str(l_clusters_range)[:100],"..."
+    print "[build_msc_tree] m_clusters_range =",str(m_clusters_range)[:100],"..."
     print "[build_msc_tree] *************************************"
         
     print "[build_msc_tree] ============================================================================================================"          
@@ -216,53 +218,66 @@ if __name__ == "__main__":
     __report_simmatrix_routine__("sim_matrix_l", sim_matrix_l)
     
     print "[build_msc_tree] ============================================================================================================"
+    print "[build_msc_tree] Building pattern-tree..."
+    msc_leaf2clusters, msc_tree = trees.build_msctree_leaf2clusters(msc2ix, msc2ix)
+     
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARN)
-    lmclusters2ixs = {}
-    for num_m_clusters in clusters_m_kvalues(len(msc2ix)):
-        for num_l_clusters in clusters_l_kvalues(len(msc2ix)):
-            if num_l_clusters<num_m_clusters: continue                    
-            print "[build_msc_tree] #############################################################################"
-            print "[build_msc_tree] Considering num_l_clusters=",num_l_clusters," num_m_clusters=",num_m_clusters
-
-            print "[build_msc_tree] --------------------------------------------------------"    
-            print "[build_msc_tree] Building MSC tree out of", len(set(msc2ix.keys())), "leaves using tree_method=",tree_method    
-            msc_leaf2clusters, msc_tree = trees.build_msctree_leaf2clusters(msc2ix, msc2ix)            
-            if tree_method == "msc":
-                new_leaf2clusters, new_tree = msc_leaf2clusters, msc_tree
-            elif tree_method == "rand":            
-                new_leaf2clusters, new_tree = random_tree.get_random_tree_leaf2clusters(msc2ix.values())
-            elif tree_method == "3lupgma":
-                clustering_l = lambda sim: upgma.upgma_clustering(sim, num_l_clusters, similarity_aggregation_method_m) 
-                clustering_m = lambda sim: upgma.upgma_clustering(sim, num_m_clusters, similarity_aggregation_method_m)          
-                new_leaf2clusters, new_tree = tree_clustering.generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m)
-            elif tree_method == "3lkmedoids":             
-                clustering_l = lambda sim: kmedoids.kmedoids_clustering(sim, num_l_clusters)
-                clustering_m = lambda sim: kmedoids.kmedoids_clustering(sim, num_m_clusters)
-                new_leaf2clusters, new_tree = tree_clustering.generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m)
-            elif tree_method == "upgma":
-                new_tree = tree_clustering.generate_upgma_tree(sim_matrix_l, similarity_aggregation_method_m)     
-                new_leaf2clusters = trees.bottomup2topdown_tree_converter(new_tree)
-            else:
-                print "[build_msc_tree] [ERROR] Unknown method of building tree!"
-                sys.exit(-4)            
-            #print "[build_msc_tree]  new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))
+    if clustering_method != "3lkmedoids": numiterations = 1 #fix parameters which don't influence
+    if clustering_method == "msc" or clustering_method == "rand" or clustering_method == "upgma": 
+        m_clusters_range,l_clusters_range = [1],[1]        
+        
+    lm2avgixs,lm2stdixs = {},{}     
+    for m_clusters in m_clusters_range:
+        for l_clusters in l_clusters_range:
+            if l_clusters<m_clusters or l_clusters>len(sim_matrix_l) or m_clusters>len(sim_matrix_l): continue
             
-            print "[build_msc_tree] --------------------------------------------------------"
-            print "[build_msc_tree] Calculating similarity indexes..."
-            comparision_result = tree_distance.get_indexes_dict(msc_leaf2clusters, new_leaf2clusters, \
-                                                    bonding_calc, membership_calc, membership_bonding,\
-                                                    only_fast_sim_calculations)
-            print "[build_msc_tree]  *******************************************"
-            print "[build_msc_tree]  comparision results=",comparision_result
-            print _fo_(comparision_result.values())
-            lmclusters2ixs[(num_l_clusters, num_m_clusters)] = comparision_result.values()
+            iteration_results = []
+            for iterno in xrange(numiterations):                                
+                print "[build_msc_tree] --------------------------------------------------------"    
+                print "[build_msc_tree] Building MSC tree out of", len(set(msc2ix.keys())), "leaves using clustering_method=",clustering_method
+                print "[build_msc_tree] [start] iteration=",iterno," l_clusters=",l_clusters," m_clusters=",m_clusters                                   
+                if clustering_method == "msc":
+                    new_leaf2clusters, new_tree = msc_leaf2clusters, msc_tree
+                elif clustering_method == "rand":            
+                    new_leaf2clusters, new_tree = random_tree.get_random_tree_leaf2clusters(msc2ix.values())
+                elif clustering_method == "3lupgma":
+                    clustering_l = lambda sim: upgma.upgma_clustering(sim, l_clusters, similarity_aggregation_method_m) 
+                    clustering_m = lambda sim: upgma.upgma_clustering(sim, m_clusters, similarity_aggregation_method_m)          
+                    new_leaf2clusters, new_tree = tree_clustering.generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m)
+                elif clustering_method == "3lkmedoids":             
+                    clustering_l = lambda sim: kmedoids.kmedoids_clustering(sim, l_clusters, 10000)
+                    clustering_m = lambda sim: kmedoids.kmedoids_clustering(sim, m_clusters, 10000)
+                    new_leaf2clusters, new_tree = tree_clustering.generate_3level_tree(sim_matrix_l, clustering_l, similarity_aggregator_m, clustering_m)
+                elif clustering_method == "upgma":
+                    new_tree = tree_clustering.generate_upgma_tree(sim_matrix_l, similarity_aggregation_method_m)     
+                    new_leaf2clusters = trees.bottomup2topdown_tree_converter(new_tree)
+                else:
+                    print "[build_msc_tree] [ERROR] Unknown method of building tree!"
+                    sys.exit(-4)            
+                #print "[build_msc_tree]  new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))
+                
+                print "[build_msc_tree] --------------------------------------------------------"
+                print "[build_msc_tree] Calculating similarity indexes..."
+                comparision_result = tree_distance.get_indexes_dict(msc_leaf2clusters, new_leaf2clusters, \
+                                                        bonding_calc, membership_calc, membership_bonding,\
+                                                        only_fast_sim_calculations)
+                print "[build_msc_tree] [end] iteration=",iterno," l_clusters=",l_clusters," m_clusters=",m_clusters," comparision_result=",comparision_result
+                iteration_results.append(comparision_result)                                
+            lm2avgixs[(l_clusters, m_clusters)] = stats.avg_lstdict(iteration_results)                
+            lm2stdixs[(l_clusters, m_clusters)] = stats.std_lstdict(iteration_results)   
             
-
-    print "[build_msc_tree] ############################################################################"
-    print "[build_msc_tree] Best configuration for simindex=0:",_fo_(_get_lm_for_max_simixs(lmclusters2ixs, 0))
-    print "[build_msc_tree] Best configuration for simindex=1:",_fo_(_get_lm_for_max_simixs(lmclusters2ixs, 1))
-    print "[build_msc_tree] Best configuration for simindex=2:",_fo_(_get_lm_for_max_simixs(lmclusters2ixs, 2))
-    print "[build_msc_tree] Best configuration for simindex=3:",_fo_(_get_lm_for_max_simixs(lmclusters2ixs, 3))
+    print "[build_msc_tree] ============================================================================================================"
+    print "[build_msc_tree] lm2avgixs=",lm2avgixs
+    print "[build_msc_tree] lm2stdixs=",lm2stdixs
+    all_supported_indexes = aux.extract_keys(lm2avgixs.values())
+    best_values_stats = {}
+    for index_name in all_supported_indexes:             
+        lm = _get_lm_for_max_simixs(lm2avgixs, index_name)
+        best_values_stats[index_name] = (lm, lm2avgixs[lm][index_name], lm2stdixs[lm][index_name])
+        #print "[build_msc_tree] Best configuration for simindex =",index_name,"\tlm =",lm,"\tvalue =",lm2avgixs[lm][index_name],"\tstd =",lm2stdixs[lm][index_name]
+    print "[build_msc_tree] -------------------------"
+    print "[build_msc_tree] [RESULTS] method =", method," zbl =",os.path.basename(zbl_path)," simmatrix =",os.path.basename(sim_matrix_path)," => ", best_values_stats
+    #print "[build_msc_tree] best_values_stats =", _fo_(best_values_stats.values())
             
     print "[build_msc_tree] ============================================================================================================"
     
@@ -273,3 +288,6 @@ if __name__ == "__main__":
     #print "[build_msc_tree]  storing new_tree bonding matrix to",NEWTREE_BONDING_PATH
     #matrix_io.fwrite_smatrix(new_B, msc_list, msc_list, NEWTREE_BONDING_PATH)        
     
+    
+if __name__ == "__main__":
+    main(sys.argv)    

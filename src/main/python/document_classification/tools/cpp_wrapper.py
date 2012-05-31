@@ -40,3 +40,5 @@ def aggregate_simmatrix(srcmatrixpath, dstmatrixpath, group2wids_list, method="a
     fout = open(dstmatrixpath, "w")
     return run_exec("../cpp_modules/main/aggregate_simmatrix", args = [groups_tmp_file_path, method], instream=fin, outstream=fout)
 
+def zbl_similarity_matrix(zblpath, dstmatrixpath, field_name, similarity_calculator):
+    run_exec("../cpp_modules/main/zbl_similarity_matrix", args = [field_name, similarity_calculator], instream=open(zblpath), outstream=open(dstmatrixpath, "w"))

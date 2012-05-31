@@ -1,6 +1,8 @@
 """A bunch of functions for calculating different mathematical measures."""
 
 import math
+from aux import extract_keys
+from aux import extract_values
 
 def avg(lst):
     """Calculates average of elements from the list."""
@@ -15,8 +17,22 @@ def avgmax(lst, fraction=0.05):
     return avg( sorted(lst)[-int(round(len(lst)*fraction)):] )
 
 
+
+    
+
+def avg_lstdict(list_of_dictionaries):
+    """Calculates average value for every key for every dictionary from the list list_of_dictionaries."""    
+    return dict( ( key,avg(extract_values(list_of_dictionaries, key)) ) for key in extract_keys(list_of_dictionaries) )
+
+def std_lstdict(list_of_dictionaries):
+    """Calculates standard deviation value for every key for every dictionary from the list list_of_dictionaries."""    
+    return dict( ( key,std(extract_values(list_of_dictionaries, key)) ) for key in extract_keys(list_of_dictionaries) )
+
+
 def std(lst):
     """Calculates standard deviation with Bessel's correction."""
+    if len(lst)<=1:
+        return 0.0
     mi = avg(lst)
     return math.sqrt(1.0/(len(lst)-1.0)  * sum( (x-mi)*(x-mi) for x in lst ) )
 

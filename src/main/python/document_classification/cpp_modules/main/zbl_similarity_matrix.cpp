@@ -103,6 +103,7 @@ int main(int argc, char *argv[]) {
 			IntDoubleListPairs& v2 = zbl2vector[zbl2vector.size()-1].second;
 			cout<<metric_calc(v1,v2)<<endl;
 		}
+		cerr<<"["<<(time(0)-starttime)<<"s] "<<zbl2vector.size()<<" rows processed..."<<endl;
 
 	} catch (const char *exception) {
 		cerr<<"Error:"<<exception<<endl;
