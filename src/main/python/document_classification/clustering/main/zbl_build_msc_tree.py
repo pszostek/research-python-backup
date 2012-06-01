@@ -15,6 +15,12 @@ import base64
 from tools import aux
 from tools import cpp_wrapper
 import build_msc_tree
+import subprocess,os
+from pipes import *
+import inspect
+import logging
+import sys
+
 
 
 if __name__ == "__main__":
@@ -51,9 +57,13 @@ if __name__ == "__main__":
     print " field_name =",field_name
     print " similarity_calculator=",similarity_calculator
     print " clustering_method=",clustering_method
-            
+                        
     if not aux.exists(sim_matrix_path):
         cpp_wrapper.zbl_similarity_matrix(zbl_path, sim_matrix_path, field_name, similarity_calculator)
         
-    cpp_wrapper.run_exec("python",['../clustering/main/build_msc_tree.py', zbl_path, sim_matrix_path, clustering_method])
+    msc_argv = ['python', 'build_msc_tree.py', zbl_path, sim_matrix_path, clustering_method]
+    p = subprocess.Popen(msc_argv)
+    p.wait()
+        
+
     

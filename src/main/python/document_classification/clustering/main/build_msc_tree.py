@@ -124,7 +124,10 @@ def _fo_(obj):
 ##############################################################################
 ##############################################################################        
                 
-def main(argv):    
+    
+if __name__ == "__main__":
+    argv = sys.argv
+    
     sys.stderr = sys.stdout
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     try:
@@ -287,7 +290,4 @@ def main(argv):
     #print "[build_msc_tree] bonding=",str(new_B)[:200]
     #print "[build_msc_tree]  storing new_tree bonding matrix to",NEWTREE_BONDING_PATH
     #matrix_io.fwrite_smatrix(new_B, msc_list, msc_list, NEWTREE_BONDING_PATH)        
-    
-    
-if __name__ == "__main__":
-    main(sys.argv)    
+        

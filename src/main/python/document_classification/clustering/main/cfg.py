@@ -20,7 +20,7 @@ import kmedoids
 
 #CODES PREFILTERING:
 MIN_COUNT_MSC = 0 #ile minimalnie dokumentow zeby zachowac klase
-MIN_COUNT_MSCPRIM = 10
+MIN_COUNT_MSCPRIM = 3
 MIN_COUNT_MSCSEC = 0
 
 #SAMPLING OF CODES REPRESENTATIONS:    
