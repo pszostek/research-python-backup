@@ -24,9 +24,10 @@ import sys
 
 
 if __name__ == "__main__":
-    print "Framework that calculates similarity matrix and then builds MSC tree using build_msc_tree.py"
-    
     sys.stderr = sys.stdout
+    print "[zbl_build_msc_tree] ============================================================================================================"        
+    print "[zbl_build_msc_tree] Framework that calculates similarity matrix and then builds MSC tree using build_msc_tree.py"
+        
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)    
     
     try:
@@ -50,13 +51,13 @@ if __name__ == "__main__":
         print "Argument exepected: clustering method for build_msc_tree.py"
         sys.exit(-1)
                 
-    sim_matrix_path = os.path.dirname(zbl_path)+"/"+os.path.basename(zbl_path).split('.')[0]+"."+field_name+"."+similarity_calculator+".txt"
+    sim_matrix_path = os.path.dirname(zbl_path)+"/"+os.path.basename(zbl_path).split('.')[0]+"."+field_name+"."+similarity_calculator
                 
-    print " zbl_path =",zbl_path
-    print " sim_matrix_path =",sim_matrix_path
-    print " field_name =",field_name
-    print " similarity_calculator=",similarity_calculator
-    print " clustering_method=",clustering_method
+    print "[zbl_build_msc_tree]  zbl_path =",zbl_path
+    print "[zbl_build_msc_tree]  sim_matrix_path =",sim_matrix_path
+    print "[zbl_build_msc_tree]  field_name =",field_name
+    print "[zbl_build_msc_tree]  similarity_calculator=",similarity_calculator
+    print "[zbl_build_msc_tree]  clustering_method=",clustering_method
                         
     if not aux.exists(sim_matrix_path):
         cpp_wrapper.zbl_similarity_matrix(zbl_path, sim_matrix_path, field_name, similarity_calculator)

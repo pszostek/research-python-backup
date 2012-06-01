@@ -98,7 +98,8 @@ def ____validate_cpp_output____(msc2ix, rows):
         
 
 def __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix):
-    dstmatrixpath = TMPDIR+"/mlevel_similarity_matrix_"+similarity_aggregation_method_l+"_"+base64.b16encode(aux.quick_md5(sim_matrix_path+similarity_aggregation_method_l+str(MIN_COUNT_MSCPRIM)))
+    #dstmatrixpath = TMPDIR+"/mlevel_similarity_matrix_"+similarity_aggregation_method_l+"_"+base64.b16encode(aux.quick_md5(sim_matrix_path+similarity_aggregation_method_l+str(MIN_COUNT_MSCPRIM)))
+    dstmatrixpath = sim_matrix_path+".msc"+str(MIN_COUNT_MSCPRIM)+"_"+similarity_aggregation_method_l
     if not aux.exists(dstmatrixpath):
         msc2wids_list = get_msc2wids_list_primarymsc(msc2ix, mscmodel)
         cpp_wrapper.aggregate_simmatrix(sim_matrix_path, dstmatrixpath, msc2wids_list, method=similarity_aggregation_method_l)
