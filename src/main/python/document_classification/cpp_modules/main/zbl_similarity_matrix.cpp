@@ -4,15 +4,17 @@
 #include <iomanip>
 #include "../zbl_io.hpp"
 #include "../sparse_vec_metrics.hpp"
+#include "../strs.hpp"
 
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////////
 
 string sparse_vector_field = "g2"; //can be set by parameter
+int endIx = MAXINT; //only values with ix<endIx will be considered; can be set by parameter
 
 //function used to calculate distance between two vectors
-double (*metric_calc)(const IntDoubleListPairs&,const IntDoubleListPairs&) = cosine;
+double (*metric_calc)(const IntDoubleListPairs&,const IntDoubleListPairs&, int endIx) = cosine;
 
 const int DOUBLE_FILE_PRECISION = 20;
 
@@ -41,16 +43,24 @@ void zblRecordProcessor(const ZblRecord& record) {
 int main(int argc, char *argv[]) {
 	cerr<<"The program calculates distances between ZBL-records using sparse (sorted!) features vectors..."<<endl;
 	cerr<<"Input records are read from stdin and output matrix is printed out to stdout."<<endl;
-	cerr<<"First argument is optional = name of field (e.g. g2) that contains sparse vector."<<endl;
+	cerr<<"First argument is optional = name of field [+ end index] (e.g. g2, g2-150) that contains sparse vector."<<endl;
+	cerr<<"Sparse vector should be ','-separated-list [feature-index: value]. Only values with ix<end index will be considered."<<endl;
 	cerr<<"Second argument is optional = distance metric (cos=cosine/tv=tversky/angular=pos-neg-angular)."<<endl;
 	if (argc > 1) {
-		sparse_vector_field = argv[1];
+		if (contains(argv[1],'-')) {
+			vector<string> parts = split(argv[1], '-');
+			sparse_vector_field = parts[0];
+			endIx = strToInt(parts[1]);
+		} else {
+			sparse_vector_field = argv[1];
+		}
 	}
 	char* metric = (char*)"cos";
 	if (argc > 2) {
 		metric = argv[2];
 	}
-	cerr<<" sparse_vector_field="<<sparse_vector_field<<endl;
+	cerr<<" sparse_vector_field(sorted by indexes!)="<<sparse_vector_field<<endl;
+	cerr<<" end index="<<endIx<<endl;
 	cerr<<" metric="<<metric<<endl;
 	try {
 		if (strcmp(metric,"cos") == 0) {
@@ -98,10 +108,10 @@ int main(int argc, char *argv[]) {
 
 			for (int j=0; j<zbl2vector.size()-1; ++j) {
 				IntDoubleListPairs& v2 = zbl2vector[j].second;
-				cout<<((i==j)?1.0:metric_calc(v1,v2))<<"\t";
+				cout<<((i==j)?1.0:metric_calc(v1,v2,endIx))<<"\t";
 			}
 			IntDoubleListPairs& v2 = zbl2vector[zbl2vector.size()-1].second;
-			cout<<metric_calc(v1,v2)<<endl;
+			cout<<metric_calc(v1,v2,endIx)<<endl;
 		}
 		cerr<<"["<<(time(0)-starttime)<<"s] "<<zbl2vector.size()<<" rows processed..."<<endl;
 

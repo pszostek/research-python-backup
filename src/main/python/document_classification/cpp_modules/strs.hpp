@@ -42,6 +42,15 @@ vector<string> split(const string& strValue, char separator)
 }
 
 
+bool contains(const char* str, char c) {
+
+	for (int i=0, end=strlen(str); i<end; ++i) {
+		if (str[i]==c) {
+			return true;
+		}
+	}
+	return false;
+}
 
 string trim2(string& str)
 {
