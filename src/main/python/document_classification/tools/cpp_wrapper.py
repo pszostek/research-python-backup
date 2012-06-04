@@ -12,13 +12,13 @@ sys.path.append(r'../../../')
 
 from data_io import aux_io    
 
-def run_exec(mpath, args = [], instream=sys.stdin, outstream=sys.stdout, errstream=sys.stderr):
+def run_exec(mpath, args = [], instream=sys.stdin, outstream=sys.stdout, errstream=sys.stderr, prefix = "./"):
     """mpath - path (starting from directory where cpp_wrapper.py is) to the exec-file."""
     strargs = list(str(arg) for arg in args)
     dir = os.path.sep.join([os.path.dirname(inspect.currentframe().f_code.co_filename),os.path.dirname(mpath)])    
     base = os.path.basename(mpath)
     logging.info("[run_exec] Running file="+base+" from dir="+dir+" args="+str(strargs))    
-    p = subprocess.Popen(args=["./"+base]+strargs, stdout=outstream, stderr=errstream, stdin=instream, cwd=dir)
+    p = subprocess.Popen(args=[prefix+base]+strargs, stdout=outstream, stderr=errstream, stdin=instream, cwd=dir)
     return p.wait()
 
         
@@ -42,3 +42,4 @@ def aggregate_simmatrix(srcmatrixpath, dstmatrixpath, group2wids_list, method="a
 
 def zbl_similarity_matrix(zblpath, dstmatrixpath, field_name, similarity_calculator):
     run_exec("../cpp_modules/main/zbl_similarity_matrix", args = [field_name, similarity_calculator], instream=open(zblpath), outstream=open(dstmatrixpath, "w"))
+    

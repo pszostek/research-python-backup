@@ -311,8 +311,8 @@ if __name__=="__main__":
     #print "------------------------------------------------"
     #_report_fields_(path, selected_fields);
     
-    #print "------------------------------------------------"
-    #_report_msc_counts_(path, selected_fields)
+    print "------------------------------------------------"
+    _report_msc_counts_(path, selected_fields)
     
     #print "------------------------------------------------"
     #print "CI_DST_FIELDS = ", ci_dst_fields
@@ -324,10 +324,10 @@ if __name__=="__main__":
     #            records_filter = lambda record: has_record_fields(record, selected_fields), \
     #            ci_dst_records_filter = lambda record: has_record_fields(record, selected_fields))
     
-    print "------------------------------------------------"
-    print "Authors identity (af) quality:"
+    #print "------------------------------------------------"
+    #print "Authors identity (af) quality:"
     #_report_af_quality_(path, records_filter = lambda record: has_record_fields(record, selected_fields)) 
-    _draw_af_hist_(path, records_filter = lambda record: has_record_fields(record, selected_fields))
+    #_draw_af_hist_(path, records_filter = lambda record: has_record_fields(record, selected_fields))
     
     #print "-----------------------------------------------"
     #print "MSC codes (mc) per record:"

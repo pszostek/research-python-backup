@@ -247,13 +247,17 @@ def msc2count_filter(msc2count, min_count):
 class MscModel:
     def __init__(self, zbl_generator, \
                  msc_predicate = lambda msc: MSC_ORDINARY_LEAF_PATTERN_RE.match(msc)):
+        
         self.msc2zblidlist = {}
         self.mscprim2zblidlist = {}
         self.mscsec2zblidlist = {}
+        
         self.msc2count = {}
         self.mscprim2count = {}
         self.mscsec2count = {}
+        
         self.update(zbl_generator, msc_predicate) 
+        
         
     def update(self, zbl_generator, \
                msc_predicate = lambda msc: MSC_ORDINARY_LEAF_PATTERN_RE.match(msc)):
@@ -261,48 +265,25 @@ class MscModel:
         for zbl in zbl_generator:############
             msc_codes = zbl_io.unpack_multivalue_field(zbl['mc'])
             zbl_id = zbl[zbl_io.ZBL_ID_FIELD]
-            _u_(self.msc2zblidlist,      msc_codes, zbl_id, msc_predicate)
-            _u_(self.mscprim2zblidlist,  msc_codes[0:1], zbl_id, msc_predicate)
+            _u_(self.msc2zblidlist,      msc_codes,     zbl_id, msc_predicate)
+            _u_(self.mscprim2zblidlist,  msc_codes[:1], zbl_id, msc_predicate)
             _u_(self.mscsec2zblidlist,   msc_codes[1:], zbl_id, msc_predicate)
+        self._update_counts_()         
+
+    def _update_counts_(self):
         #####################################
         logging.info("[MscModel.update] calculating msc2counts")
         self.msc2count      = _msc2zblidlist_to_msc2count_(self.msc2zblidlist)
         self.mscprim2count  = _msc2zblidlist_to_msc2count_(self.mscprim2zblidlist)
-        self.mscsec2count   = _msc2zblidlist_to_msc2count_(self.mscsec2zblidlist)
-        
-    def report(self):
-        print "[MscModel] report"
-        print " len(self.msc2zblidlist)=", len(self.msc2zblidlist),"->",str(list(self.msc2zblidlist.iteritems()))[:75]
-        print " len(self.mscprim2zblidlist)=", len(self.mscprim2zblidlist),"->",str(list(self.mscprim2zblidlist.iteritems()))[:75]
-        print " len(self.mscsec2zblidlist)=", len(self.mscsec2zblidlist),"->",str(list(self.mscsec2zblidlist.iteritems()))[:75]
-        print " len(self.msc2count)=", len(self.msc2count),"->",str(list(self.msc2count.iteritems()))[:75]
-        print " len(self.mscprim2count)=", len(self.mscprim2count),"->",str(list(self.mscprim2count.iteritems()))[:75]
-        print " len(self.mscsec2count)=", len(self.mscsec2count),"->",str(list(self.mscsec2count.iteritems()))[:75]        
-        print " self.msc2count prefix3 avg,std,min,max child codes =", number_of_child_codes_stats(self.msc2count.keys(), prefix_len = 3)
-        print " self.msc2count prefix2 avg,std,min,max child codes =", number_of_child_codes_stats(self.msc2count.keys(), prefix_len = 2)
-        print " self.self.msc2zblidlist prefix5 avg,std,min,max child docs =", number_of_child_docs_stats(self.msc2zblidlist, prefix_len = 5)
-        print " self.self.msc2zblidlist prefix3 avg,std,min,max child docs =", number_of_child_docs_stats(self.msc2zblidlist, prefix_len = 3)
-        print " self.self.msc2zblidlist prefix2 avg,std,min,max child docs =", number_of_child_docs_stats(self.msc2zblidlist, prefix_len = 2)
-        print " self.self.mscprim2zblidlist prefix5 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscprim2zblidlist, prefix_len = 5)
-        print " self.self.mscprim2zblidlist prefix3 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscprim2zblidlist, prefix_len = 3)
-        print " self.self.mscprim2zblidlist prefix2 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscprim2zblidlist, prefix_len = 2)
+        self.mscsec2count   = _msc2zblidlist_to_msc2count_(self.mscsec2zblidlist)        
         
     def keep(self, keep_msccodes):
         #keep_msccodes = set(keep_msccodes)
-        self.msc2count      = _keep_msc_(self.msc2count, keep_msccodes)
-        self.mscprim2count  = _keep_msc_(self.mscprim2count, keep_msccodes)
-        self.mscsec2count   = _keep_msc_(self.mscsec2count, keep_msccodes)
         self.msc2zblidlist      = _keep_msc_(self.msc2zblidlist, keep_msccodes)
         self.mscprim2zblidlist  = _keep_msc_(self.mscprim2zblidlist, keep_msccodes)
         self.mscsec2zblidlist   = _keep_msc_(self.mscsec2zblidlist, keep_msccodes)
+        self._update_counts_()        
         
-    def allcodes(self):
-        """Returns set of all known codes."""
-        return self.msc2count.keys()
-        #return set(self.msc2count).union(set(self.mscprim2count)).union(set(self.mscsec2count))
-        
-    def N(self):
-        return len(self.allcodes())
        
     def keep_msc_mincount(self, min_count, minprim_count, minsec_count):        
         logging.info("[keep_msc_mincount] min_count="+str(min_count)+", minprim_count="+str(minprim_count)+", minsec_count="+str(minsec_count))
@@ -321,8 +302,122 @@ class MscModel:
             m3 = set( msc2count_filter(self.mscsec2count, minsec_count) ) 
         keep_msccodes = m1.intersection(m2).intersection(m3)
         self.keep(keep_msccodes)
-###################################################################################################        
+        
 ###################################################################################################
+
+    def allcodes(self):
+        """Returns set of all known codes."""
+        return self.msc2count.keys()
+        #return set(self.msc2count).union(set(self.mscprim2count)).union(set(self.mscsec2count))
+        
+    def doc2primcode(self):
+        doc2codes = {}
+        for msc,ids in self.mscprim2zblidlist:
+            for id in ids:
+                doc2codes[id] = msc
+        return doc2codes  
+        
+    def doc2seccodes(self):
+        doc2codes = {}
+        for msc,ids in self.mscsec2zblidlist:
+            for id in ids:
+                doc2codes[id] = doc2codes.get(id, []) + [id]
+        return doc2codes
+    
+    def _alldocs_(self, code2docs):
+        alldocuments = set()
+        for docs in code2docs.values():
+            alldocuments.update(docs)
+        return alldocuments
+        
+    def alldocs(self):
+        """Returns set of all documents that have known codes."""
+        return self._alldocs_(self.msc2zblidlist)
+
+    def primdocs(self):
+        return self._alldocs_(self.mscprim2zblidlist)
+
+    def secdocs(self):
+        return self._alldocs_(self.mscsec2zblidlist)
+
+    
+    def _doc2codes_(self, code2list):
+        doc2codes = dict((doc,[]) for doc in self.alldocs())          
+        for msc,docs in code2list:
+            for doc in docs:
+                doc2codes[doc] = doc2codes.get(doc, []) + [msc] 
+        return dict( (doc,set(codes)) for doc,codes in doc2codes.iteritems() ) 
+    
+    def doc2codes(self):
+        return self._doc2codes_(self.msc2zblidlist.iteritems())
+
+    def doc2primcodes(self):
+        return self._doc2codes_(self.mscprim2zblidlist.iteritems())
+
+    def doc2seccodes(self):
+        return self._doc2codes_(self.mscsec2zblidlist.iteritems())
+
+    def doc2count(self):                
+        return dict( (doc,len(codes)) for doc,codes in self.doc2codes().iteritems() )
+
+    def doc2primcount(self):                
+        return dict( (doc,len(codes)) for doc,codes in self.doc2primcodes().iteritems() )
+
+    def doc2seccount(self):                
+        return dict( (doc,len(codes)) for doc,codes in self.doc2seccodes().iteritems() )
+
+    def N(self):
+        return len(self.allcodes())
+        
+###################################################################################################
+    def report(self):
+        print "[MscModel] report"
+        print " total num of known codes=", len(self.allcodes()),
+        print " total num docs with known codes=", len(self.alldocs())
+        print " docs with primary code assigned=", len(self.primdocs())
+        print " docs with secondary codes assigned =", len(self.secdocs())
+        print " ------------------------------"
+        print " len(self.msc2zblidlist)=", len(self.msc2zblidlist),"->",str(list(self.msc2zblidlist.iteritems()))[:75]
+        print " len(self.mscprim2zblidlist)=", len(self.mscprim2zblidlist),"->",str(list(self.mscprim2zblidlist.iteritems()))[:75]
+        print " len(self.mscsec2zblidlist)=", len(self.mscsec2zblidlist),"->",str(list(self.mscsec2zblidlist.iteritems()))[:75]
+        print " ------------------------------"
+        print " len(self.msc2count)=", len(self.msc2count),"->",str(list(self.msc2count.iteritems()))[:75]
+        print " len(self.mscprim2count)=", len(self.mscprim2count),"->",str(list(self.mscprim2count.iteritems()))[:75]
+        print " len(self.mscsec2count)=", len(self.mscsec2count),"->",str(list(self.mscsec2count.iteritems()))[:75]
+        print " ------------------------------"
+        print " sum(self.msc2count.values())=", sum(self.msc2count.values())
+        print " sum(self.mscprim2count.values())=", sum(self.mscprim2count.values())
+        print " sum(self.mscsec2count.values())=", sum(self.mscsec2count.values())
+        print " ------------------------------"        
+        print " self.msc2count prefix3 avg,std,min,max child codes =", number_of_child_codes_stats(self.msc2count.keys(), prefix_len = 3)
+        print " self.msc2count prefix2 avg,std,min,max child codes =", number_of_child_codes_stats(self.msc2count.keys(), prefix_len = 2)
+        print " ------------------------------"
+        print " self.self.msc2zblidlist prefix5 avg,std,min,max child docs =", number_of_child_docs_stats(self.msc2zblidlist, prefix_len = 5)
+        print " self.self.msc2zblidlist prefix3 avg,std,min,max child docs =", number_of_child_docs_stats(self.msc2zblidlist, prefix_len = 3)
+        print " self.self.msc2zblidlist prefix2 avg,std,min,max child docs =", number_of_child_docs_stats(self.msc2zblidlist, prefix_len = 2)
+        print " ------------------------------"
+        print " self.self.mscprim2zblidlist prefix5 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscprim2zblidlist, prefix_len = 5)
+        print " self.self.mscprim2zblidlist prefix3 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscprim2zblidlist, prefix_len = 3)
+        print " self.self.mscprim2zblidlist prefix2 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscprim2zblidlist, prefix_len = 2)
+        print " ------------------------------"
+        print " self.self.mscsec2zblidlist prefix5 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscsec2zblidlist, prefix_len = 5)
+        print " self.self.mscsec2zblidlist prefix3 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscsec2zblidlist, prefix_len = 3)
+        print " self.self.mscsec2zblidlist prefix2 avg,std,min,max child docs =", number_of_child_docs_stats(self.mscsec2zblidlist, prefix_len = 2)
+        print " ------------------------------"
+        
+        
+        doc2count = self.doc2count()
+        doc2primcount = self.doc2primcount()
+        doc2seccount = self.doc2seccount()
+        print " avg codes per doc =",avg(doc2count.values()) 
+        print " std codes per doc =",std(doc2count.values())
+        print " max codes per doc =",max(doc2count.values())
+        print " avg primcodes per doc =",avg(doc2primcount.values()) 
+        print " std primcodes per doc =",std(doc2primcount.values())
+        print " max primcodes per doc =",max(doc2primcount.values())
+        print " avg seccodes per doc =",avg(doc2seccount.values()) 
+        print " std seccodes per doc =",std(doc2seccount.values())
+        print " max seccodes per doc =",max(doc2seccount.values())
 
 
 
