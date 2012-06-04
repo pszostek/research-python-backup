@@ -29,18 +29,22 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	const char* agrfunc = "a";
+	char* agrfunc = "a";
 	if (argc>2) {
 		agrfunc = argv[2];
 	}
 
+	cerr<<"[aggregate_simmatrix] Aggregation function name="<<agrfunc<<endl;
+	if (strlen(agrfunc)>4) {
+		agrfunc[4] = '\0';
+	}
 	if (strcmp(agrfunc, "a")==0) {
 		cerr<<"[aggregate_simmatrix] Aggregation function=sim_aggregation_avg"<<endl;
 		sim_aggregation_func = sim_aggregation_avg_link;
 	} else
 	if (strcmp(agrfunc, "avgw")==0) {
-		cerr<<"[aggregate_simmatrix] Aggregation function=sim_aggregation_avg_mul"<<endl;
-		sim_aggregation_func = sim_aggregation_avg_mul;
+		cerr<<"[aggregate_simmatrix] Aggregation function=sim_aggregation_avgw_avg"<<endl;
+		sim_aggregation_func = sim_aggregation_avgw_avg;
 	} else
 	if (strcmp(agrfunc, "s")==0) {
 		cerr<<"[aggregate_simmatrix] Aggregation function=sim_aggregation_single_link"<<endl;

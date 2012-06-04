@@ -53,23 +53,42 @@ double sim_aggregation_complete_link(const Group& g1, const Group& g2, double** 
 }
 
 
-double sim_aggregation_avg_mul(const Group& g1, const Group& g2, double** simmatrix) {
 
+
+double sim_aggregation_avgw(const Group& g1, const Group& g2, double** simmatrix, double (*weight_calc)(double w1, double w2)) {
 	double total_sim = 0.0;
 	double total_weights = 0.0;
 
 	for (int i=0; i<g1.ixs.size(); ++i) {
-		int ix1 = g1.ixs[i];
+		int ix1 	= g1.ixs[i];
+		double w1 	= g1.weights[i];
 		for (int j=0; j<g2.ixs.size(); ++j) {
-			int ix2 = g2.ixs[j];
+			int ix2 	= g2.ixs[j];
+			double w2 	= g2.weights[j];
 
-			float weight 	= g1.weights[i]*g2.weights[i];
+			float weight 	 = weight_calc(w1,w2);
 			total_sim 		+= weight*simmatrix[ix1][ix2];
 			total_weights 	+= weight;
 		}
 	}
 
 	return total_sim / total_weights;
+}
+
+double avg_weight_calculator(double w1, double w2) {
+	return (w1+w2)/2.0;
+}
+
+double sim_aggregation_avgw_avg(const Group& g1, const Group& g2, double** simmatrix) {
+	return sim_aggregation_avgw(g1, g2, simmatrix, avg_weight_calculator);
+}
+
+double mul_weight_calculator(double w1, double w2) {
+	return w1*w2;
+}
+
+double sim_aggregation_avgw_mul(const Group& g1, const Group& g2, double** simmatrix) {
+	return sim_aggregation_avgw(g1, g2, simmatrix, mul_weight_calculator);
 }
 
 

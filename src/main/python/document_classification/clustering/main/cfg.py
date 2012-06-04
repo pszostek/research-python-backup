@@ -28,7 +28,9 @@ mscmsc_calculate_sample_size = lambda n: 100000 #ile maksymalnie par dokument x 
 
 #CLUSTERING:
 clustering_method = "3lupgma"
-similarity_aggregation_method_l = "a" #cpp version: a/s/avgw/m
+similarity_aggregation_method_l = "a"   #cpp version: a/s/avgw/m
+secondary_codes_weight = 0.0            #weight for secondary codes: default no secondary codes
+secondary_weight_method = 'e'
 similarity_aggregation_method_m = "a" 
 
 numiterations = 10

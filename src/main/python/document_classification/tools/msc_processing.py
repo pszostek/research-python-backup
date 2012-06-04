@@ -224,9 +224,7 @@ def mscmsc2sampleids_generator(msclist, msc2zblidlist, calculate_sample_size = 1
 ###################################################################################################
 ###################################################################################################
 
-
-
-def _u_(msc2zblcodes, msc_codes, zbl_code, msc_predicate):
+def _update_(msc2zblcodes, msc_codes, zbl_code, msc_predicate):
     for msc_code in msc_codes:
         if msc_predicate(msc_code):
             msc2zblcodes[msc_code] = msc2zblcodes.get(msc_code, []) + [zbl_code]
@@ -246,8 +244,7 @@ def msc2count_filter(msc2count, min_count):
 ###################################################################################################
 class MscModel:
     def __init__(self, zbl_generator, \
-                 msc_predicate = lambda msc: MSC_ORDINARY_LEAF_PATTERN_RE.match(msc)):
-        
+                 msc_predicate = lambda msc: MSC_ORDINARY_LEAF_PATTERN_RE.match(msc)):        
         self.msc2zblidlist = {}
         self.mscprim2zblidlist = {}
         self.mscsec2zblidlist = {}
@@ -265,11 +262,11 @@ class MscModel:
         for zbl in zbl_generator:############
             msc_codes = zbl_io.unpack_multivalue_field(zbl['mc'])
             zbl_id = zbl[zbl_io.ZBL_ID_FIELD]
-            _u_(self.msc2zblidlist,      msc_codes,     zbl_id, msc_predicate)
-            _u_(self.mscprim2zblidlist,  msc_codes[:1], zbl_id, msc_predicate)
-            _u_(self.mscsec2zblidlist,   msc_codes[1:], zbl_id, msc_predicate)
+            _update_(self.msc2zblidlist,      msc_codes,     zbl_id, msc_predicate)
+            _update_(self.mscprim2zblidlist,  msc_codes[:1], zbl_id, msc_predicate)
+            _update_(self.mscsec2zblidlist,   msc_codes[1:], zbl_id, msc_predicate)
         self._update_counts_()         
-
+        
     def _update_counts_(self):
         #####################################
         logging.info("[MscModel.update] calculating msc2counts")
@@ -278,14 +275,16 @@ class MscModel:
         self.mscsec2count   = _msc2zblidlist_to_msc2count_(self.mscsec2zblidlist)        
         
     def keep(self, keep_msccodes):
-        #keep_msccodes = set(keep_msccodes)
+        """Removes all codes that are not in keep_msccodes set."""
+        keep_msccodes           = set(keep_msccodes)
         self.msc2zblidlist      = _keep_msc_(self.msc2zblidlist, keep_msccodes)
         self.mscprim2zblidlist  = _keep_msc_(self.mscprim2zblidlist, keep_msccodes)
         self.mscsec2zblidlist   = _keep_msc_(self.mscsec2zblidlist, keep_msccodes)
         self._update_counts_()        
         
        
-    def keep_msc_mincount(self, min_count, minprim_count, minsec_count):        
+    def keep_msc_mincount(self, min_count, minprim_count, minsec_count):
+        """Removes all codes that do not fulfill count minimal conditions."""
         logging.info("[keep_msc_mincount] min_count="+str(min_count)+", minprim_count="+str(minprim_count)+", minsec_count="+str(minsec_count))
         all = set(self.allcodes())
         if min_count<=0:
@@ -309,21 +308,7 @@ class MscModel:
         """Returns set of all known codes."""
         return self.msc2count.keys()
         #return set(self.msc2count).union(set(self.mscprim2count)).union(set(self.mscsec2count))
-        
-    def doc2primcode(self):
-        doc2codes = {}
-        for msc,ids in self.mscprim2zblidlist:
-            for id in ids:
-                doc2codes[id] = msc
-        return doc2codes  
-        
-    def doc2seccodes(self):
-        doc2codes = {}
-        for msc,ids in self.mscsec2zblidlist:
-            for id in ids:
-                doc2codes[id] = doc2codes.get(id, []) + [id]
-        return doc2codes
-    
+            
     def _alldocs_(self, code2docs):
         alldocuments = set()
         for docs in code2docs.values():
@@ -335,9 +320,11 @@ class MscModel:
         return self._alldocs_(self.msc2zblidlist)
 
     def primdocs(self):
+        """Returns set of all documents that have known primary codes."""
         return self._alldocs_(self.mscprim2zblidlist)
 
     def secdocs(self):
+        """Returns set of all documents that have known secondary codes."""
         return self._alldocs_(self.mscsec2zblidlist)
 
     
@@ -349,31 +336,41 @@ class MscModel:
         return dict( (doc,set(codes)) for doc,codes in doc2codes.iteritems() ) 
     
     def doc2codes(self):
+        """Returns {id->known codes}."""        
         return self._doc2codes_(self.msc2zblidlist.iteritems())
 
     def doc2primcodes(self):
+        """Returns {id->known primary codes}."""
         return self._doc2codes_(self.mscprim2zblidlist.iteritems())
 
     def doc2seccodes(self):
+        """Returns {id->known secondary codes}."""
         return self._doc2codes_(self.mscsec2zblidlist.iteritems())
 
-    def doc2count(self):                
+    def doc2count(self):         
+        """Returns {id->num msc known  codes}."""       
         return dict( (doc,len(codes)) for doc,codes in self.doc2codes().iteritems() )
 
-    def doc2primcount(self):                
+    def doc2primcount(self):              
+        """Returns {id->num known prim codes (should be 0 or 1)}."""  
         return dict( (doc,len(codes)) for doc,codes in self.doc2primcodes().iteritems() )
 
     def doc2seccount(self):                
+        """Returns {id->num known sec codes}."""
         return dict( (doc,len(codes)) for doc,codes in self.doc2seccodes().iteritems() )
 
     def N(self):
+        """Returns number of left codes."""
         return len(self.allcodes())
         
 ###################################################################################################
-    def report(self):
+    def report(self, short = True):
         print "[MscModel] report"
+        
         print " total num of known codes=", len(self.allcodes()),
         print " total num docs with known codes=", len(self.alldocs())
+        if short==True: return
+        
         print " docs with primary code assigned=", len(self.primdocs())
         print " docs with secondary codes assigned =", len(self.secdocs())
         print " ------------------------------"

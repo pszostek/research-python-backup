@@ -50,6 +50,16 @@ from cfg import *
 ##############################################################################
 ##############################################################################
 
+docid2primcode  = {} #keep source information about primary code
+docid2seccodes  = {} #keep source information about all secondary codes
+
+def _update_docmodel_(zbl):
+    if not "mc" in zbl: return
+    docid                   = zbl[zbl_io.ZBL_ID_FIELD]
+    msc_codes               = zbl_io.unpack_multivalue_field(zbl['mc'])
+    docid2primcode[docid]   = msc_codes[0]
+    docid2seccodes[docid]   = msc_codes[1:] 
+
 
 def _get_zbl_generator_(zbl_path, must_have_field = 'mc'):
     """Returns zbl-records generator that has guaranteed presence of must_have_field field."""
@@ -59,6 +69,7 @@ def _get_zbl_generator_(zbl_path, must_have_field = 'mc'):
     for ix,zbl in enumerate(zbl_io.read_zbl_records(f, UNI)): 
         if must_have_field in zbl:
             #zbl[zbl_io.ZBL_ID_FIELD] = ix #replacing ids with numbers for faster processing
+            _update_docmodel_(zbl)
             yield zbl
             
 ##############################################################################
@@ -71,30 +82,28 @@ def __report_simmatrix_routine__(name, matrix):
     print "[build_msc_tree] ",name," of size ",len(matrix),"x",len(matrix[0])
     print str(numpy.array(matrix))[:500]
     
-    
 
 
 ##############################################################################
 ##############################################################################
 ##############################################################################
     
-def get_msc2wids_list(msc2ix, mscmodel, secondary_weight = 0.0, secondary_constant_weight = True):
+def get_msc2wids_list(msc2ix, mscmodel, secondary_codes_weight = 0.0, docid2seccodes = None):
     """Returns list of pairs (msc-code, list-of-weighted-ids-of-elements (pairs (ix,weight) ) ).
     
-    Secondary codes have weight that can be either constant or .
+    Secondary codes have weight that can be either constant or split over secondary codes.
     """
-    ix2msc        = dict((ix,msc) for msc,ix in msc2ix.iteritems())    
-    id2seccodes  = mscmodel.doc2seccodes()
+    ix2msc        = dict((ix,msc) for msc,ix in msc2ix.iteritems())        
     msc2wids_list = []
     for ix in xrange(len(ix2msc)): #sort with ix = 0,1,2...
         msc         = ix2msc[ix]
         wids_prim   = list( (id,1.0) for id in mscmodel.mscprim2zblidlist.get(msc,[]) )        
-        if secondary_weight<=0.0:
+        if secondary_codes_weight <= 0.0:
             wids_sec = []
-        elif secondary_constant_weight == True:
-            wids_sec    = list( (id,secondary_weight) for id in mscmodel.mscsec2zblidlist.get(msc,[]) )
-        else:            
-            wids_sec    = list( (id,secondary_weight/len(id2seccodes[id])) for id in mscmodel.mscsec2zblidlist.get(msc,[]) )
+        elif docid2seccodes is None:
+            wids_sec    = list( (id,secondary_codes_weight) for id in mscmodel.mscsec2zblidlist.get(msc,[]) )
+        else:
+            wids_sec    = list( (id, secondary_codes_weight/len(docid2seccodes[id]) ) for id in mscmodel.mscsec2zblidlist.get(msc,[]) )
         msc2wids_list.append( (msc, wids_prim+wids_sec) )
     return msc2wids_list 
 
@@ -108,11 +117,11 @@ def ____validate_cpp_output____(msc2ix, rows):
             sys.exit(-2)
         
 
-def __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix):
+def __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix, secondary_codes_weight, docid2seccodes):
     #dstmatrixpath = TMPDIR+"/mlevel_similarity_matrix_"+similarity_aggregation_method_l+"_"+base64.b16encode(aux.quick_md5(sim_matrix_path+similarity_aggregation_method_l+str(MIN_COUNT_MSCPRIM)))
     dstmatrixpath = sim_matrix_path+".msc"+str(MIN_COUNT_MSCPRIM)+"_"+similarity_aggregation_method_l
     if not aux.exists(dstmatrixpath):
-        msc2wids_list = get_msc2wids_list(msc2ix, mscmodel, 0.5, False)
+        msc2wids_list = get_msc2wids_list(msc2ix, mscmodel, secondary_codes_weight, docid2seccodes)
         cpp_wrapper.aggregate_simmatrix(sim_matrix_path, dstmatrixpath, msc2wids_list, method=similarity_aggregation_method_l)
     logging.info("[build_msc_tree] Loading simmatrix from: "+str(dstmatrixpath))            
     (rows, cols, sim_matrix_l) = matrix_io.fread_smatrix(dstmatrixpath)
@@ -148,7 +157,7 @@ if __name__ == "__main__":
         print "[build_msc_tree] Argument expected: zbl-file-path."
         sys.exit(-1)
     try:
-        sim_matrix_path = argv[2]
+        sim_matrix_path = argv[2] 
     except:
         print "[build_msc_tree] Argument exepected: similarity-matrix"
         sys.exit(-1)
@@ -175,15 +184,25 @@ if __name__ == "__main__":
     elif    similarity_aggregation_method_m == 'm':   similarity_aggregator_m = matrix_min
     elif    similarity_aggregation_method_m == 'a':   similarity_aggregator_m = matrix_avg_U
     else:
-        print "[build_msc_tree][Error] Uknown similarity_aggregator_m method!"
+        print "[build_msc_tree][Error] Unknown similarity_aggregator_m method!"
         sys.exit(-2)
           
-    if similarity_aggregation_method_l!='s' and\
-       similarity_aggregation_method_l!='a' and\
-       similarity_aggregation_method_l!='m':
-        print "[build_msc_tree][Error] Uknown similarity_aggregation_method_l method!"
+    if similarity_aggregation_method_l.startswith("avgw"): #weighted average link
+        try:
+            secondary_codes_weight  = float(similarity_aggregation_method_l[5:])            
+            secondary_weight_method = similarity_aggregation_method_l[4]
+            if  secondary_weight_method!='e' and\
+                secondary_weight_method!='s':       
+                print "[build_msc_tree][Error] Unknown secondary_weight_method method!"
+                sys.exit(-2)              
+        except:
+            print "[build_msc_tree][Error] Not enough params for this similarity_aggregation_method_l method!"
+            sys.exit(-3)            
+    elif similarity_aggregation_method_l!='s' and\
+         similarity_aggregation_method_l!='a' and\
+         similarity_aggregation_method_l!='m':    
+        print "[build_msc_tree][Error] Unknown similarity_aggregation_method_l method!"
         sys.exit(-2)              
-
                 
     #######################################################################################################
     #######################################################################################################
@@ -191,12 +210,15 @@ if __name__ == "__main__":
     #######################################################################################################
     print "[build_msc_tree] ============================================================================================================"        
     print "[build_msc_tree] Framework that reconstructs msc-tree."
+    print "[build_msc_tree] Sample args: sample.zbl.txt sample.g2.angular 3lupgma-avgwe0.7-a"
     print "[build_msc_tree] *************************************"
     print "[build_msc_tree] MIN_COUNT_MSC =",MIN_COUNT_MSC
     print "[build_msc_tree] MIN_COUNT_MSCPRIM =",MIN_COUNT_MSCPRIM
     print "[build_msc_tree] MIN_COUNT_MSCSEC =",MIN_COUNT_MSCSEC
     print "[build_msc_tree] clustering_method =", clustering_method
     print "[build_msc_tree] similarity_aggregation_method_l =", similarity_aggregation_method_l
+    print "[build_msc_tree] secondary_weight_method =",secondary_weight_method
+    print "[build_msc_tree] secondary_codes_weight =",secondary_codes_weight
     print "[build_msc_tree] similarity_aggregation_method_m =", similarity_aggregation_method_m
     print "[build_msc_tree] similarity_aggregator_m =",similarity_aggregator_m    
     print "[build_msc_tree] numiterations =",numiterations 
@@ -212,7 +234,7 @@ if __name__ == "__main__":
 
     print "[build_msc_tree] --------------------------------------------------------"
     print "[build_msc_tree] Building model MSC codes counts..."
-    mscmodel = msc_processing.MscModel( zblid2zbl.values() )
+    mscmodel = msc_processing.MscModel( zblid2zbl.values() )    
     mscmodel.report()
     
     print "[build_msc_tree] --------------------------------------------------------"
@@ -232,7 +254,13 @@ if __name__ == "__main__":
     print "[build_msc_tree] ============================================================================================================"
     print "[build_msc_tree] Preparing similarity matrix on L-level..."
     #sim_matrix_l = __python_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix)
-    sim_matrix_l = __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix)     
+    if secondary_weight_method=='e': #constant weight for all secondary codes
+        sim_matrix_l = __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix, secondary_codes_weight, None)
+    elif secondary_weight_method=='s': #weight split over secondary codes
+        sim_matrix_l = __cpp_sim_matrix_l_generation_routine__(sim_matrix_path, mscmodel, msc2ix, secondary_codes_weight, docid2seccodes)
+    else:
+        print "[build_msc_tree][Error] Unknown secondary_weight_method method!"
+        sys.exit(-4)    
     __report_simmatrix_routine__("sim_matrix_l", sim_matrix_l)
     
     print "[build_msc_tree] ============================================================================================================"
