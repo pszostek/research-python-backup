@@ -23,21 +23,28 @@ def tf(doc_wordid2count, wordid):
 def wf(doc_wordid2count, wordid):
     tfval = tf(doc_wordid2count, wordid)
     if tfval > 0.0:
-        return 1.0 + log(tfval)
+        return 1.0 + log(tfval)  #???
     return 0.0
 
 #########################################################################
 
 def idf(wordsmodel, wordid):  
     return log2( wordsmodel.N() / wordsmodel.df(wordid) )
-    
-def _pcalc_tfgf_(wordsmodel, doc_wordid2count, wordid):
-    return  tf(doc_wordid2count, wordid) / wordsmodel.gf(wordid) 
 
 def _pcalc_wfgf_(wordsmodel, doc_wordid2count, wordid):
     return  wf(doc_wordid2count, wordid) / wordsmodel.gf(wordid) 
 
-def ent(wordsmodel, wordid, pcalc = _pcalc_tfgf_):
+def _pcalc_tfgf_(wordsmodel, doc_wordid2count, wordid):
+    return  tf(doc_wordid2count, wordid) / wordsmodel.gf(wordid) 
+
+def ent(wordsmodel, wordid):
+    """Returns entropy precalculated in wordsmodel."""
+    val = wordsmodel.wordid2entropy.get(wordid, 1.0)
+    #logging.info("[ent] "+str(wordid)+" -> "+str(val))
+    return val
+
+def entropy(wordsmodel, wordid, pcalc = _pcalc_tfgf_):
+    """Calculates entropy using only information about counts."""
     s = 0.0
     for doc_wordid2count in wordsmodel.docs_wordid2count:
         p = pcalc(wordsmodel, doc_wordid2count, wordid)
@@ -55,11 +62,16 @@ class WordsModel:
         #self.docs_wordidpair2count = [] #list of documents, where document is represented as {(wordid1,wordid2): number-of-ocurrences-in-document}
         self.wordidpair2nonzerodocs = {} #{(wordid1,wordid2): number-of-docs-that-have-pair-of-words}
         
+        self.wordid2entropy = {}
+        self.numwords = 0
+        
     def report(self):
         print self,"--------"
         print "wordid2count=",str(self.wordid2count)[:150] 
         print "wordid2nonzerodocs=",str(self.wordid2nonzerodocs)[:150]
         print "docs_wordid2count=",str(self.docs_wordid2count)[:150]
+        print "wordid2entropy=",str(self.wordid2entropy)[:250]
+        print "self.numwords=",str(self.numwords)
         print "-------------"
         
     def update(self, doc_wordid2count):
@@ -79,13 +91,19 @@ class WordsModel:
                 wordid2 = doc_wordid2count_list[j][0]                
                 self.wordidpair2nonzerodocs[(wordid1, wordid2)] = self.wordidpair2nonzerodocs.get((wordid1, wordid2),0)+1 
                 self.wordidpair2nonzerodocs[(wordid2, wordid1)] = self.wordidpair2nonzerodocs.get((wordid2, wordid1),0)+1
-        
+
         for wordid,count in doc_wordid2count_list: #slowa i dokumenty ze slowami w korpusie 
             self.wordid2count[wordid]       = self.wordid2count.get(wordid,0) + count
             self.wordid2nonzerodocs[wordid] = self.wordid2nonzerodocs.get(wordid,0) + 1
+                                
             
     def finish_updates(self):
-        pass
+        logging.info("[WordsModel.finish_updates] calculating numwords")    
+        self.numwords = sum(self.wordid2count.values())
+        logging.info("[WordsModel.finish_updates] calculating entropies")
+        for i, (wordid, count) in enumerate(self.wordid2count.iteritems()):
+            if i%1000==0: logging.info("[WordsModel.finish_updates] entropies "+str(i)+"/"+str(len(self.wordid2count)))
+            self.wordid2entropy[wordid] = entropy(self, wordid, pcalc = _pcalc_tfgf_)
             
     def N(self): #numdocs
         return len(self.docs_wordid2count)
@@ -94,7 +112,7 @@ class WordsModel:
         return self.wordid2nonzerodocs.get(wordid, 0)
     
     def gf(self, wordid): #???
-        return float(self.wordid2count.get(wordid, 0)) / sum(self.wordid2count.values())
+        return float(self.wordid2count.get(wordid, 0)) / self.numwords
 
 #########################################################################
 
@@ -119,7 +137,7 @@ def map_wordsmodel_overall_weighting(fin, fout, wordsmodel, src_field="g0", dst_
     """Maps value of src_field using wordsmodel and weigting function. Results stores to dst_field."""
     counter = 0    
     for i,record in enumerate(zbl_io.read_zbl_records(fin)):                            
-        if i%00 == 0: logging.info("[map_wordsmodel_overall_weighting] "+str(i)+" records processed."+str(counter)+"enriched.")
+        if i%100 == 0: logging.info("[map_wordsmodel_overall_weighting] "+str(i)+" records processed."+str(counter)+"enriched.")
         if src_field in record:                
             doc_wordid2count    = _di_( zbl_io.unpack_dictionary_field(record[src_field]) )
             doc_wordid2weight   = [( wordid,weight(wordsmodel,doc_wordid2count,wordid) ) for wordid,count in doc_wordid2count.iteritems() ]
