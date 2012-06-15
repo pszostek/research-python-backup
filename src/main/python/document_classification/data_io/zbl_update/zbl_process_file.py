@@ -564,7 +564,7 @@ if __name__ == "__main__":
         print GENSIM_MAP, '[list-of-fields] [filter-by-fields (opt)] [gen-sim-dict-pickle (opt)] [dst-field-name (opt)] - merges selected fields and maps them using gensim-dictionary (results stored as additional field)'
         print GENSIM_TFIDF, '[gen-sim-tfidf-model-pickle (opt)] [src-field-name (opt)] - builds and pickles gensim tfidf model'
         print GENSIM_TFIDFMAP, '[gen-sim-tfidf-model-pickle (opt)] [src-field-name (opt)] [dst-field-name (opt)] - calculates TFIDF for src-field and stores into dst-field'
-        print GENSIM_LDA,"/",GENSIM_LSA,"[num_topics (opt)] [id:weight-field-name (opt)] [gensim-dict-pickle-path (opt)] [topics-log-path (opt)] - builds LDA/LSA model"
+        print GENSIM_LDA,"/",GENSIM_LSA,"[num_topics (opt)] [id:weight-field-name (opt)] [gensim-dict-pickle-path (opt)] [gensim-semantic-pickle-path (opt)]  [topics-log-path (opt)] - builds LDA/LSA model"
         print GENSIM_SEMANTIC_MAP,"[id:weight-src-field-name (opt)] [id:weight-dst-field-name (opt)] [gensim-semantic-model-pickle-path (opt)] - calculates weights using semantic-model"
         
         print WD_MODEL, "[id:count-src-field-name (opt)] [words-docs-model-pickle-path (opt)] builds words x docs model"

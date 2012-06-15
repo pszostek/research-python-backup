@@ -218,6 +218,25 @@ def mscmsc2sampleids_generator(msclist, msc2zblidlist, calculate_sample_size = 1
             yield (msc1,msc2), sampleids
 
 
+def print_mschierarchy_stats(mscleaves):
+    def numones(counts):
+        return sum(1 for c in counts if c==1) 
+    msc32count = {}
+    for msc in mscleaves:
+        msc3 = msc[:3]
+        msc32count[msc3] = msc32count.get(msc3,0)+1
+    print "MSC of type XXY has children:"        
+    print "min=",min(msc32count.values()),"max=",max(msc32count.values()),"avg=",avg(msc32count.values()),"std=",std(msc32count.values()),"numones=",numones(msc32count.values())," out of=",len(msc32count)
+        
+    msc22count = {}
+    for msc3 in msc32count:
+        msc2 = msc3[:2]
+        msc22count[msc2] = msc22count.get(msc2,0)+1
+    print "MSC of type XX has children:"        
+    print "min=",min(msc22count.values()),"max=",max(msc22count.values()),"avg=",avg(msc22count.values()),"std=",std(msc22count.values()),"numones=",numones(msc22count.values())," out of=",len(msc22count)
+
+        
+         
 
 ###################################################################################################
 ###################################################################################################
@@ -369,6 +388,7 @@ class MscModel:
         
         print " total num of known codes=", len(self.allcodes()),
         print " total num docs with known codes=", len(self.alldocs())
+        print_mschierarchy_stats(self.allcodes())        
         if short==True: return
         
         print " docs with primary code assigned=", len(self.primdocs())

@@ -23,7 +23,7 @@ def tf(doc_wordid2count, wordid):
 def wf(doc_wordid2count, wordid):
     tfval = tf(doc_wordid2count, wordid)
     if tfval > 0.0:
-        return 1.0 + log(tfval)  #???
+        return 1.0 + log2(1.0+tfval)  #???
     return 0.0
 
 #########################################################################

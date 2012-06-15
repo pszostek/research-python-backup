@@ -62,5 +62,5 @@ int main(int argc, char* argv[]) {
 	cout<<"skipped="<<skipped<<endl;
 	cout<<"compared="<<compared<<endl;
 	cout<<"correct="<<correct<<endl;
-	cout<<"correct/compared="<<(correct*100.0)/compared<<"%"<<endl;
+	cout<<"correct/compared="<<(correct*100.0)/compared<<"%"<<"\t f2="<<matrix2_path<<endl;
 }

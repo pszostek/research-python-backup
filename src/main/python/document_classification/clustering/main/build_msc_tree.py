@@ -78,7 +78,7 @@ def _get_zbl_generator_(zbl_path, must_have_field = 'mc'):
 
                                         
 def __report_simmatrix_routine__(name, matrix):
-    if len(sim_matrix.validate_similarity_matrix(matrix))>0: print "[build_msc_tree] ERROR. invalid similarity values in ",name,"!"; sys.exit(-2)
+    if len(sim_matrix.validate_similarity_matrix(matrix))>0: print "[build_msc_tree] Error. invalid similarity values in ",name,"!"; sys.exit(-2)
     print "[build_msc_tree] ",name," of size ",len(matrix),"x",len(matrix[0])
     print str(numpy.array(matrix))[:500]
     
@@ -113,7 +113,7 @@ def ____validate_cpp_output____(msc2ix, rows):
     ix2msc = dict( (ix,msc) for msc,ix in msc2ix.iteritems() )
     for ix,row in enumerate(rows):
         if not ix2msc[ix] == row:
-            print "[build_msc_tree] [ERROR] aggregate_simmatrix invalid output!"
+            print "[build_msc_tree] [Error] aggregate_simmatrix invalid output!"
             sys.exit(-2)
         
 
@@ -298,7 +298,7 @@ if __name__ == "__main__":
                     new_tree = tree_clustering.generate_upgma_tree(sim_matrix_l, similarity_aggregation_method_m)     
                     new_leaf2clusters = trees.bottomup2topdown_tree_converter(new_tree)
                 else:
-                    print "[build_msc_tree] [ERROR] Unknown method of building tree!"
+                    print "[build_msc_tree] [Error] Unknown method of building tree!"
                     sys.exit(-4)            
                 #print "[build_msc_tree]  new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))
                 

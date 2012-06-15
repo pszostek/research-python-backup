@@ -33,11 +33,11 @@ secondary_codes_weight = 0.0            #weight for secondary codes: default no 
 secondary_weight_method = 'e'
 similarity_aggregation_method_m = "a" 
 
-numiterations = 10
+numiterations = 3
 #m_clusters_range = [4,10,100,150,300,400]  
 #l_clusters_range = [4,10,100,150,300,400] 
-m_clusters_range = range(2,10000,2)
-l_clusters_range = range(2,10000,2)
+m_clusters_range = range(10,10000,10)
+l_clusters_range = range(10,10000,10)
 
 #SIMILARITY CACLULATIONS:    
 bonding_calc = lambda common_levels_fraction: common_levels_fraction
