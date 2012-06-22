@@ -37,20 +37,25 @@ def _get_zbl_generator_(zbl_path, must_have_fields):
             yield zbl
 
 
-#must_have_fields = ['mc']
-#must_have_fields = ['mc','ti','py','ab', 'ut', 'ft', 'ci','au', 'af', 'jt', 'jn'] #full-data
-must_have_fields = ['mc','ti','py','ab','ut','ci'] #AB-CI
- 
-MIN_COUNT_MSC = 3 #ile minimalnie dokumentow zeby zachowac klase
-NUM_TRIES = 100 #ile eksperymenow
-VALID_LEAF_PATTERN_RE = msc_processing.MSC_ORDINARY_LEAF_PATTERN_RE
-
-bonding_calc = lambda common_path_fraction: common_path_fraction
-membership_calc = lambda common_levels: common_levels/2.0
-membership_bonding = angular_bonding
-only_fast_calculations = False
         
 if __name__ == "__main__":
+    print "Compares tree extracted from data to random trees..."
+    
+    #CONFIGURATION:
+    #must_have_fields = ['mc']
+    #must_have_fields = ['mc','ti','py','ab', 'ut', 'ft', 'ci','au', 'af', 'jt', 'jn'] #full-data
+    must_have_fields = ['mc','ti','py','ab','ut','ci'] #AB-CI
+     
+    MIN_COUNT_MSC = 3 #ile minimalnie dokumentow zeby zachowac klase
+    NUM_TRIES = 100 #ile eksperymenow
+    VALID_LEAF_PATTERN_RE = msc_processing.MSC_ORDINARY_LEAF_PATTERN_RE
+    
+    bonding_calc = lambda common_path_fraction: common_path_fraction
+    membership_calc = lambda common_levels: common_levels/2.0
+    membership_bonding = angular_bonding
+    only_fast_calculations = False
+    ####################################################################
+    
     #logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     try:
         zbl_path = sys.argv[1]
