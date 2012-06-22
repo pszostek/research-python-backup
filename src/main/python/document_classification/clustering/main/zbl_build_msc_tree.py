@@ -48,7 +48,7 @@ if __name__ == "__main__":
     try:
         clustering_method = sys.argv[4]
     except:
-        print "Argument exepected: clustering method for build_msc_tree.py"
+        print "Argument exepected: clustering method for build_msc_tree.py e.g. 3lupgma-a-a"
         sys.exit(-1)
                 
     sim_matrix_path = os.path.dirname(zbl_path)+"/"+os.path.basename(zbl_path).split('.')[0]+"."+field_name+"."+similarity_calculator
