@@ -157,14 +157,20 @@ if __name__ == "__main__":
     except:
         print "[build_msc_tree] Argument expected: zbl-file-path."
         sys.exit(-1)
+        
     try:
-        sim_matrix_path = argv[2] 
+        field_name = sys.argv[2]
     except:
-        print "[build_msc_tree] Argument exepected: similarity-matrix"
+        print "Argument exepected: source-field-in-zbl-records e.g. g2"
         sys.exit(-1)
-                 
     try:
-        method = argv[3]
+        similarity_calculator = sys.argv[3]
+    except:
+        print "Argument exepected: similarity-calculator-name e.g. angular"
+        sys.exit(-1)        
+                         
+    try:
+        method = argv[4]
         method_parts = method.split('-')
         clustering_method = method_parts[0]
         
@@ -205,6 +211,8 @@ if __name__ == "__main__":
         print "[build_msc_tree][Error] Unknown similarity_aggregation_method_l method!"
         sys.exit(-2)              
                 
+    sim_matrix_path = os.path.dirname(zbl_path)+"/"+os.path.basename(zbl_path).split('.')[0]+"."+field_name+"."+similarity_calculator                    
+                
     #######################################################################################################
     #######################################################################################################
     #######################################################################################################
@@ -213,7 +221,9 @@ if __name__ == "__main__":
     print "[build_msc_tree] Framework that reconstructs msc-tree."
     print "[build_msc_tree] Sample args: sample.zbl.txt sample.g2.angular 3lupgma-avgwe0.7-a"
     print "[build_msc_tree] *************************************"
-    print "[build_msc_tree] MIN_COUNT_MSC =",MIN_COUNT_MSC
+    print "[build_msc_tree] zbl_path=",zbl_path
+    print "[build_msc_tree] sim_matrix_path=",sim_matrix_path
+    print "[build_msc_tree] MIN_COUNT_MSC =",MIN_COUNT_MSC    
     print "[build_msc_tree] MIN_COUNT_MSCPRIM =",MIN_COUNT_MSCPRIM
     print "[build_msc_tree] MIN_COUNT_MSCSEC =",MIN_COUNT_MSCSEC
     print "[build_msc_tree] clustering_method =", clustering_method
@@ -226,6 +236,14 @@ if __name__ == "__main__":
     print "[build_msc_tree] l_clusters_range =",str(l_clusters_range)[:100],"..."
     print "[build_msc_tree] m_clusters_range =",str(m_clusters_range)[:100],"..."
     print "[build_msc_tree] *************************************"
+    
+    if not aux.exists(sim_matrix_path) or os.stat(sim_matrix_path).st_size <= 0:
+        print "[build_msc_tree] ============================================================================================================"          
+        print "[build_msc_tree] Building similarity matrix: sim_matrix_path = ", sim_matrix_path
+        #print "[zbl_build_msc_tree] cpp:",zbl_path, sim_matrix_path, field_name, similarity_calculator
+        cpp_wrapper.zbl_similarity_matrix(zbl_path, sim_matrix_path, field_name, similarity_calculator)    
+        print "[build_msc_tree] ================================================================"        
+
         
     print "[build_msc_tree] ============================================================================================================"          
     print "[build_msc_tree] Loading ZBL records from zbl_path=",zbl_path    
@@ -273,6 +291,7 @@ if __name__ == "__main__":
     if clustering_method == "msc" or clustering_method == "rand" or clustering_method == "upgma": 
         m_clusters_range,l_clusters_range = [1],[1]        
         
+    
     lm2avgixs,lm2stdixs = {},{}     
     for m_clusters in m_clusters_range:
         for l_clusters in l_clusters_range:
@@ -306,8 +325,8 @@ if __name__ == "__main__":
                 print "[build_msc_tree] --------------------------------------------------------"
                 print "[build_msc_tree] Calculating similarity indexes..."
                 comparision_result = tree_distance.get_selected_indexes(msc_leaf2clusters, new_leaf2clusters, \
-                                                        bonding_calc, membership_calc, membership_bonding,\
-                                                        similarity_indexes)
+                                                                        similarity_indexes,\
+                                                                        bonding_calc, membership_calc, membership_bonding)
                 print "[build_msc_tree] [end] iteration=",iterno," l_clusters=",l_clusters," m_clusters=",m_clusters," comparision_result=",comparision_result
                 iteration_results.append(comparision_result)                                
             lm2avgixs[(l_clusters, m_clusters)] = stats.avg_lstdict(iteration_results)                

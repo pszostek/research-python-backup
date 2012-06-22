@@ -9,5 +9,5 @@ echo "Processing..."
 while read cfg
 do
    echo " configuration = $cfg"
-   python zbl_build_msc_tree.py $1 $cfg >> $3 2>> $4   
+   python build_msc_tree.py $1 $cfg >> $3 2>> $4   
 done < $2
