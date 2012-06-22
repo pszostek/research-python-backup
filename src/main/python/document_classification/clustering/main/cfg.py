@@ -37,17 +37,17 @@ similarity_aggregation_method_m = "a"
 numiterations = 3
 #m_clusters_range = [4,10,100,150,300,400]  
 #l_clusters_range = [4,10,100,150,300,400] 
-m_clusters_range = range(10,10000,10)
-l_clusters_range = range(10,10000,10)
+m_clusters_range = [50]#range(10,10000,10)
+l_clusters_range = [150]#range(10,10000,10)
 
 #SIMILARITY CACLULATIONS:    
 bonding_calc = lambda common_levels_fraction: common_levels_fraction
 membership_calc = lambda common_levels: common_levels/2.0
 membership_bonding = angular_bonding
-only_fast_sim_calculations = True 
+similarity_indexes = ["Hf-ARI"] 
 
 
 TMPDIR = tempfile.gettempdir();
 NEWTREE_BONDING_PATH = TMPDIR+"/newtree_bonding.txt"
 
-            
+

@@ -29,7 +29,7 @@ if __name__ == "__main__":
     bonding_calc = lambda common_path_fraction: common_path_fraction
     membership_calc = lambda common_levels: common_levels/2.0
     membership_bonding = angular_bonding
-    only_fast_calculations = True
+    only_fast_calculations = False
     NUM_TRIES = 100 #how many experiments
     #############################################################
     

@@ -305,9 +305,9 @@ if __name__ == "__main__":
                 
                 print "[build_msc_tree] --------------------------------------------------------"
                 print "[build_msc_tree] Calculating similarity indexes..."
-                comparision_result = tree_distance.get_indexes_dict(msc_leaf2clusters, new_leaf2clusters, \
+                comparision_result = tree_distance.get_selected_indexes(msc_leaf2clusters, new_leaf2clusters, \
                                                         bonding_calc, membership_calc, membership_bonding,\
-                                                        only_fast_sim_calculations)
+                                                        similarity_indexes)
                 print "[build_msc_tree] [end] iteration=",iterno," l_clusters=",l_clusters," m_clusters=",m_clusters," comparision_result=",comparision_result
                 iteration_results.append(comparision_result)                                
             lm2avgixs[(l_clusters, m_clusters)] = stats.avg_lstdict(iteration_results)                
