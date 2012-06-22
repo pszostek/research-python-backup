@@ -21,6 +21,7 @@ def B_using_tree_l2c(leaf2clusters, bonding_calc = lambda common_path_fraction: 
     bonding_calc(common_path_fraction) - returns bonding value  
     """        
     B = []             
+    #print "[B_using_tree_l2c] Considering:",leaf2clusters
     max_levels = trees.tree_depth(leaf2clusters)
     logging.info("[B_using_tree_l2c] max_levels="+str(max_levels))    
     

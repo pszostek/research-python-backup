@@ -53,12 +53,19 @@ def Brouwer_abcd(B1, B2, \
     B1,B2 - two bonding matrices (lists of lists).
     Matrices' size is NxN where N = number of samples.
     """    
+    
     cB1 = complement_calc(B1)
     cB2 = complement_calc(B2)
-    a = matrix2scalar_calc( aggregation_calc(B1, B2) )
-    b = matrix2scalar_calc( aggregation_calc(cB1, B2) )
-    c = matrix2scalar_calc( aggregation_calc(B1, cB2) )
-    d = matrix2scalar_calc( aggregation_calc(cB1, cB2) )
+    
+    M1 = aggregation_calc(B1, B2)
+    M2 = aggregation_calc(cB1, B2)
+    M3 = aggregation_calc(B1, cB2)
+    M4 = aggregation_calc(cB1, cB2)
+        
+    a = matrix2scalar_calc( M1 )
+    b = matrix2scalar_calc( M2 )
+    c = matrix2scalar_calc( M3 )
+    d = matrix2scalar_calc( M4 )
     logging.info("[Brouwer_abcd] a="+str(a)+" b="+str(b)+" c="+str(c)+" d="+str(d))    
     return (a,b,c,d)
 

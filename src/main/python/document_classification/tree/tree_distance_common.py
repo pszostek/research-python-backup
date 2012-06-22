@@ -22,6 +22,8 @@ def h(X):
         for j in xrange(i+1, len(X)):
             total = total + X[i][j]
     return total
+
+hsum = lambda X: h(X) 
     
 def complement(B):
     """Returns 1-B for matrix (list of lists) B.
