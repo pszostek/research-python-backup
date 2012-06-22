@@ -27,6 +27,8 @@ def get_selected_indexes(leaf2clusters, leaf2clusters2,\
     selected_indexes = set(selected_indexes)
     index2value = {}
     
+    print "[get_selected_indexes] = ",selected_indexes
+    
     ###############################################################################################################################
 
     if "Bf-RI" in selected_indexes or "Bf-ARI" in selected_indexes or "Bf-JI" in selected_indexes or "Hf-ARI" in selected_indexes:     
