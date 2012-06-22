@@ -1,4 +1,4 @@
-
+"""The module that allows to run binary programs."""
 import subprocess,os
 from pipes import *
 import inspect

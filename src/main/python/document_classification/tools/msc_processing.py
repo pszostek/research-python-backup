@@ -1,4 +1,4 @@
-"""Functions useful for different processings of vectors and dictionaries of MSC codes.
+"""Functions useful for different processing of vectors and dictionaries of MSC codes.
 
 @author: tkusm
 @author: mlukasik
