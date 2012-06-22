@@ -1,4 +1,5 @@
 """Framework that reconstructs msc-tree."""
+
 import sys,os
 sys.path.append(r'../')
 sys.path.append(r'../../')
@@ -300,7 +301,7 @@ if __name__ == "__main__":
                 else:
                     print "[build_msc_tree] [Error] Unknown method of building tree!"
                     sys.exit(-4)            
-                #print "[build_msc_tree]  new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))
+                print "[build_msc_tree]  new tree=",str(trees.map_tree_leaves(new_tree, ix2msc))
                 
                 print "[build_msc_tree] --------------------------------------------------------"
                 print "[build_msc_tree] Calculating similarity indexes..."

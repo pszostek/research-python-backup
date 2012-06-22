@@ -1,3 +1,4 @@
+"""The program generates random similarity matrix for MSC codes (filtered and extracted from ZBL file)."""
 
 import sys,os
 sys.path.append(r'../')

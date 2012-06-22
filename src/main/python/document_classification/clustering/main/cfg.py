@@ -1,3 +1,4 @@
+"""Configuration file for build_nsc_tree script."""
 
 import sys,os
 import tempfile   
