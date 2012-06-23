@@ -21,7 +21,7 @@ import kmedoids
 
 #CODES PREFILTERING:
 MIN_COUNT_MSC = 0 #ile minimalnie dokumentow zeby zachowac klase
-MIN_COUNT_MSCPRIM = 10
+MIN_COUNT_MSCPRIM = 1 #10
 MIN_COUNT_MSCSEC = 0
 
 #SAMPLING OF CODES REPRESENTATIONS:    
@@ -44,7 +44,7 @@ l_clusters_range = [4]#range(10,10000,10)
 bonding_calc = lambda common_levels_fraction: common_levels_fraction
 membership_calc = lambda common_levels: common_levels/2.0
 membership_bonding = angular_bonding
-similarity_indexes = ["Hf-ARI"] 
+similarity_indexes = ["Hf-ARI"]
 
 
 TMPDIR = tempfile.gettempdir();

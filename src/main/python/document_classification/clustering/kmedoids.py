@@ -5,9 +5,10 @@ import data_io
 from data_io import matrix_io
 from tools import matlab_wrapper
 import logging
+import os
 
-TMP_INPATH = "/tmp/kmedoids_simmatrix.txt"
-TMP_OUTPATH = "/tmp/kmedoids_assignment.txt"
+TMP_INPATH = "/tmp/kmedoids_simmatrix."+str(os.getpid())
+TMP_OUTPATH = "/tmp/kmedoids_assignment."+str(os.getpid())
 
 def kmedoids_clustering(similarity_matrix, k, maxits = 1000000):
     """Takes symmetric similarity matrix (list of lists) and returns list: assignment to clusters."""

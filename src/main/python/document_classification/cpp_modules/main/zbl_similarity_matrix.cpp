@@ -1,6 +1,7 @@
 
 #include <ctime>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include "../zbl_io.hpp"
 #include "../sparse_vec_metrics.hpp"
@@ -31,21 +32,36 @@ void zblRecordProcessor(const ZblRecord& record) {
 	if (f_it == record.end()) return;
 	string fieldValue = f_it->second;
 
-	//cout<<"[zblRecordProcessor] -----"<<endl;
+	//(*fout)<<"[zblRecordProcessor] -----"<<endl;
 	zbl2vector.push_back( make_pair(id, IntDoubleListPairs()) );
 	extractIntDoubleListPairs(fieldValue, zbl2vector.back().second);
-	//cout<<"[zblRecordProcessor] id="<<id<<"->"<<zbl2vector.back().second.size()<<"elements"<<endl;
+	//(*fout)<<"[zblRecordProcessor] id="<<id<<"->"<<zbl2vector.back().second.size()<<"elements"<<endl;
 	processed_counter++;
 }
 
 
 
 int main(int argc, char *argv[]) {
-	cerr<<"The program calculates distances between ZBL-records using sparse (sorted!) features vectors..."<<endl;
-	cerr<<"Input records are read from stdin and output matrix is printed out to stdout."<<endl;
-	cerr<<"First argument is optional = name of field [+ end index] (e.g. g2, g2-150) that contains sparse vector."<<endl;
-	cerr<<"Sparse vector should be ','-separated-list [feature-index: value]. Only values with ix<end index will be considered."<<endl;
-	cerr<<"Second argument is optional = distance metric (cos=cosine/tv=tversky/angular=pos-neg-angular)."<<endl;
+	cerr<<"[zbl_similarity_matrix] #########################################"<<endl;
+	cerr<<"[zbl_similarity_matrix] The program calculates distances between ZBL-records using sparse (sorted!) features vectors..."<<endl;
+	cerr<<"[zbl_similarity_matrix] Input records are read from stdin and output matrix is printed out to stdout."<<endl;
+	cerr<<"[zbl_similarity_matrix] First argument is optional = name of field [+ end index] (e.g. g2, g2-150) that contains sparse vector."<<endl;
+	cerr<<"[zbl_similarity_matrix] Sparse vector should be ','-separated-list [feature-index: value]. Only values with ix<end index will be considered."<<endl;
+	cerr<<"[zbl_similarity_matrix] Second argument is optional = distance metric (cos=cosine/tv=tversky/angular=pos-neg-angular)."<<endl;
+
+	istream* fin = &cin;
+	ostream* fout = &cout;
+	ifstream fileInput;
+	ofstream fileOutput;
+	if (argc > 4) {
+		cerr<<"[zbl_similarity_matrix] Opening for reading:"<<argv[3]<<endl;
+		fileInput.open(argv[3]);
+		fin = &fileInput;
+		cerr<<"[zbl_similarity_matrix] Opening for writing:"<<argv[4]<<endl;
+		fileOutput.open(argv[4]);
+		fout = &fileOutput;
+	}
+
 	if (argc > 1) {
 		if (contains(argv[1],'-')) {
 			vector<string> parts = split(argv[1], '-');
@@ -59,64 +75,64 @@ int main(int argc, char *argv[]) {
 	if (argc > 2) {
 		metric = argv[2];
 	}
-	cerr<<" sparse_vector_field(sorted by indexes!)="<<sparse_vector_field<<endl;
-	cerr<<" end index="<<endIx<<endl;
-	cerr<<" metric="<<metric<<endl;
+	cerr<<"[zbl_similarity_matrix]  sparse_vector_field(sorted by indexes!)="<<sparse_vector_field<<endl;
+	cerr<<"[zbl_similarity_matrix]  end index="<<endIx<<endl;
+	cerr<<"[zbl_similarity_matrix]  metric="<<metric<<endl;
 	try {
 		if (strcmp(metric,"cos") == 0) {
-			cerr<<"Using cosine distance..."<<endl;
+			cerr<<"[zbl_similarity_matrix] Using cosine distance..."<<endl;
 			metric_calc = cosine;
 		} else
-		if (strcmp(metric,"tv") == 0) {
-			cerr<<"Using tversky metric..."<<endl;
+		if (strcmp(metric,"tv") == 0 || strcmp(metric,"tversky") == 0) {
+			cerr<<"[zbl_similarity_matrix] Using tversky metric..."<<endl;
 			metric_calc = tversky;
 		} else
 		if (strcmp(metric,"angular") == 0){
-			cerr<<"Using angular (positive and negative elements of vectors) metric..."<<endl;
+			cerr<<"[zbl_similarity_matrix] Using angular (positive and negative elements of vectors) metric..."<<endl;
 			metric_calc = angular_posneg;
 		} else {
-			cerr<<"Unknown metric name (cos=cosine/tv=tversky/angular=pos-neg-angular  supported)!"<<endl;
+			cerr<<"[zbl_similarity_matrix] Unknown metric name (cos=cosine/tv=tversky/angular=pos-neg-angular  supported)!"<<endl;
 			exit(-2);
 		}
 
-		cerr<<"loading input records..."<<endl;
-		readZblStream(cin, zblRecordProcessor);
-		cerr<<processed_counter<<" records extracted out of "<<records_counter<<" read"<<endl;
+		cerr<<"[zbl_similarity_matrix] loading input records..."<<endl;
+		readZblStream(*fin, zblRecordProcessor);
+		cerr<<"[zbl_similarity_matrix] "<<processed_counter<<" records extracted out of "<<records_counter<<" read"<<endl;
 
 
-		cerr<<"printing rows' labels..."<<endl;
+		cerr<<"[zbl_similarity_matrix] printing rows' labels..."<<endl;
 		for (int i=0; i<zbl2vector.size()-1; ++i) {
-			cout<<zbl2vector[i].first<<"\t";
+			(*fout)<<zbl2vector[i].first<<"\t";
 		}
-		cout<<zbl2vector[zbl2vector.size()-1].first<<endl;
+		(*fout)<<zbl2vector[zbl2vector.size()-1].first<<endl;
 
-		cerr<<"printing cols' labels..."<<endl;
+		cerr<<"[zbl_similarity_matrix] printing cols' labels..."<<endl;
 		for (int i=0; i<zbl2vector.size()-1; ++i) {
-			cout<<zbl2vector[i].first<<"\t";
+			(*fout)<<zbl2vector[i].first<<"\t";
 		}
-		cout<<zbl2vector[zbl2vector.size()-1].first<<endl;
+		(*fout)<<zbl2vector[zbl2vector.size()-1].first<<endl;
 
-		cerr<<"calculating and printing data..."<<endl;
-		cout<<setprecision(DOUBLE_FILE_PRECISION);
-		cout.setf(ios::fixed, ios::floatfield);
-		cout.setf(ios::showpoint);
+		cerr<<"[zbl_similarity_matrix] calculating and printing data..."<<endl;
+		(*fout)<<setprecision(DOUBLE_FILE_PRECISION);
+		(*fout).setf(ios::fixed, ios::floatfield);
+		(*fout).setf(ios::showpoint);
 		long starttime = time(0);
 		for (int i=0; i<zbl2vector.size(); ++i) {
-			if (i%1000==0) cerr<<"["<<(time(0)-starttime)<<"s] "<<i<<" rows processed..."<<endl;
+			if (i%1000==0) cerr<<"[zbl_similarity_matrix] ["<<(time(0)-starttime)<<"s] "<<i<<" rows processed..."<<endl;
 			IntDoubleListPairs& v1 = zbl2vector[i].second;
 			//printPairVector("v1=",v1);
 
 			for (int j=0; j<zbl2vector.size()-1; ++j) {
 				IntDoubleListPairs& v2 = zbl2vector[j].second;
-				cout<<((i==j)?1.0:metric_calc(v1,v2,endIx))<<"\t";
+				(*fout)<<((i==j)?1.0:metric_calc(v1,v2,endIx))<<"\t";
 			}
 			IntDoubleListPairs& v2 = zbl2vector[zbl2vector.size()-1].second;
-			cout<<metric_calc(v1,v2,endIx)<<endl;
+			(*fout)<<metric_calc(v1,v2,endIx)<<endl;
 		}
-		cerr<<"["<<(time(0)-starttime)<<"s] "<<zbl2vector.size()<<" rows processed..."<<endl;
+		cerr<<"[zbl_similarity_matrix] ["<<(time(0)-starttime)<<"s] "<<zbl2vector.size()<<" rows processed..."<<endl;
 
 	} catch (const char *exception) {
-		cerr<<"Error:"<<exception<<endl;
+		cerr<<"[zbl_similarity_matrix] Error:"<<exception<<endl;
 		return -1;
 	}
 	return 0;

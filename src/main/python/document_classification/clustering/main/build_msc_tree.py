@@ -141,6 +141,8 @@ def _get_lm_for_max_simixs(lmclusters2ixs, simixno):
 def _fo_(obj):
     return str(obj).replace(",","\t").replace(" ","")
 
+
+
         
 ##############################################################################
 ##############################################################################
@@ -241,7 +243,10 @@ if __name__ == "__main__":
         print "[build_msc_tree] ============================================================================================================"          
         print "[build_msc_tree] Building similarity matrix: sim_matrix_path = ", sim_matrix_path
         #print "[zbl_build_msc_tree] cpp:",zbl_path, sim_matrix_path, field_name, similarity_calculator
-        cpp_wrapper.zbl_similarity_matrix(zbl_path, sim_matrix_path, field_name, similarity_calculator)    
+        result = cpp_wrapper.run_exec("../cpp_modules/main/zbl_similarity_matrix", args = [field_name, similarity_calculator, zbl_path, sim_matrix_path])
+        if result != 0:
+            print "[build_msc_tree][ERROR] Failure while calculating documents' similarity matrix!"
+            sys.exit(-10)
         print "[build_msc_tree] ================================================================"        
 
         

@@ -8,6 +8,7 @@
 #include "../sim_aggregation.hpp"
 #include <ctime>
 #include <map>
+#include <fstream>
 
 using namespace std;
 
@@ -18,6 +19,18 @@ double (*sim_aggregation_func)(const Group& g1, const Group& g2, double** simmat
 int main(int argc, char *argv[]) {
 	cerr<<"[aggregate_simmatrix] ##############################################################"<<endl;
 	cerr<<"[aggregate_simmatrix] The program aggregates similarity matrix."<<endl;
+
+	FILE* fin = stdin;
+	ostream* fout = &cout;
+	ofstream fileOutput;
+	if (argc > 4) {
+		cerr<<"[aggregate_simmatrix] Opening for reading:"<<argv[3]<<endl;
+		fin = fopen(argv[3], "r");
+		cerr<<"[aggregate_simmatrix] Opening for writing:"<<argv[4]<<endl;
+		fileOutput.open(argv[4]);
+		fout = &fileOutput;
+	}
+
 
 	const char* groups_path;
 	if (argc>1) {
@@ -61,14 +74,14 @@ int main(int argc, char *argv[]) {
 	//cerr<<setprecision(DOUBLE_FILE_PRECISION);
 	//cerr.setf(ios::fixed, ios::floatfield);
 	//cerr.setf(ios::showpoint);
-	cout<<setprecision(DOUBLE_FILE_PRECISION);
-	cout.setf(ios::fixed, ios::floatfield);
-	cout.setf(ios::showpoint);
+	(*fout)<<setprecision(DOUBLE_FILE_PRECISION);
+	(*fout).setf(ios::fixed, ios::floatfield);
+	(*fout).setf(ios::showpoint);
 
 	cerr<<"[aggregate_simmatrix] Loading similarity matrix from stdin..."<<endl;
 	long starttime = time(0);
 	Matrix m;
-	loadMatrix(stdin, m);
+	loadMatrix(fin, m);
 	cerr<<"[aggregate_simmatrix]  matrix loaded in "<<(time(0)-starttime)<<"s"<<endl;
 
 	cerr<<"[aggregate_simmatrix] Converting matrix ids to ixs..."<<endl;
@@ -108,16 +121,16 @@ int main(int argc, char *argv[]) {
 	cerr<<"[aggregate_simmatrix]  group no="<<groups.size()-1<<" out of "<<groups.size()<<endl;
 
 
-	cerr<<"[aggregate_simmatrix] Printing matrix to cout..."<<endl;
+	cerr<<"[aggregate_simmatrix] Printing matrix to (*fout)..."<<endl;
 	for (int g=0; g<groups.size()-1; ++g) {
-		cout<<groups[g].name<<"\t";
+		(*fout)<<groups[g].name<<"\t";
 	}
-	cout<<groups.back().name<<endl;
+	(*fout)<<groups.back().name<<endl;
 	for (int g=0; g<groups.size()-1; ++g) {
-		cout<<groups[g].name<<"\t";
+		(*fout)<<groups[g].name<<"\t";
 	}
-	cout<<groups.back().name<<endl;
-	printMatrix(simmatrix, cout, groups.size(), groups.size());
+	(*fout)<<groups.back().name<<endl;
+	printMatrix(simmatrix, (*fout), groups.size(), groups.size());
 
 	cerr<<"[aggregate_simmatrix] ##############################################################"<<endl;
 }

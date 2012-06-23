@@ -47,10 +47,14 @@ if __name__ == "__main__":
     parameters = open(parameters_file).readlines()
         
     for configuration in parameters:
-        msc_argv = ['python', 'build_msc_tree.py', zbl_path] + configuration.split()
-        print "[zbl_build_msc_tree]  running:",msc_argv
-        p = subprocess.Popen(msc_argv)
-        print "--->",p.wait()
+        if len(configuration.strip())==0: continue
+        try:
+            msc_argv = ['python', 'build_msc_tree.py', zbl_path] + configuration.split()
+            print "[zbl_build_msc_tree]  running:",msc_argv
+            p = subprocess.Popen(msc_argv, cwd=".")
+            print "--->",p.wait()
+        except:
+            print "[zbl_build_msc_tree] Error while executing with configuration =", configuration
         
 
     

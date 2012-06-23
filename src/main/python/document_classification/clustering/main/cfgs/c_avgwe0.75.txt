@@ -1,0 +1,83 @@
+g0 tv upgma-avgwe0.75-a
+g1 angular upgma-avgwe0.75-a
+g0 tv upgma-avgwe0.75-s
+g1 angular upgma-avgwe0.75-s
+g0 tv upgma-avgwe0.75-c
+g1 angular upgma-avgwe0.75-c
+g0 tv 3lupgma-avgwe0.75-a
+g1 angular 3lupgma-avgwe0.75-a
+g0 tv 3lupgma-avgwe0.75-c
+g1 angular 3lupgma-avgwe0.75-c
+g0 tv 3lupgma-avgwe0.75-s
+g1 angular 3lupgma-avgwe0.75-s
+
+
+g2-50 angular upgma-avgwe0.75-a
+g2-100 angular upgma-avgwe0.75-a
+g2-200 angular upgma-avgwe0.75-a
+g2-300 angular upgma-avgwe0.75-a
+g2-400 angular upgma-avgwe0.75-a
+g2-500 angular upgma-avgwe0.75-a
+
+g2-50 angular upgma-avgwe0.75-s
+g2-100 angular upgma-avgwe0.75-s
+g2-200 angular upgma-avgwe0.75-s
+g2-300 angular upgma-avgwe0.75-s
+g2-400 angular upgma-avgwe0.75-s
+g2-500 angular upgma-avgwe0.75-s
+
+g2-50 angular upgma-avgwe0.75-c
+g2-100 angular upgma-avgwe0.75-c
+g2-200 angular upgma-avgwe0.75-c
+g2-300 angular upgma-avgwe0.75-c
+g2-400 angular upgma-avgwe0.75-c
+g2-500 angular upgma-avgwe0.75-c
+
+
+
+g2-25 angular 3lupgma-avgwe0.75-a
+g2-25 angular 3lupgma-avgwe0.75-s
+g2-25 angular 3lupgma-avgwe0.75-c
+
+g2-50 angular 3lupgma-avgwe0.75-a
+g2-50 angular 3lupgma-avgwe0.75-s
+g2-50 angular 3lupgma-avgwe0.75-c
+
+g2-100 angular 3lupgma-avgwe0.75-a
+g2-100 angular 3lupgma-avgwe0.75-s
+g2-100 angular 3lupgma-avgwe0.75-c
+
+g2-200 angular 3lupgma-avgwe0.75-a
+g2-200 angular 3lupgma-avgwe0.75-s
+g2-200 angular 3lupgma-avgwe0.75-c
+
+g2-300 angular 3lupgma-avgwe0.75-a
+g2-300 angular 3lupgma-avgwe0.75-s
+g2-300 angular 3lupgma-avgwe0.75-c
+
+g2-400 angular 3lupgma-avgwe0.75-a
+g2-400 angular 3lupgma-avgwe0.75-s
+g2-400 angular 3lupgma-avgwe0.75-c
+
+g2-500 angular 3lupgma-avgwe0.75-a
+g2-500 angular 3lupgma-avgwe0.75-s
+g2-500 angular 3lupgma-avgwe0.75-c
+
+
+
+g2-350 angular 3lupgma-avgwe0.75-a
+g2-350 angular 3lupgma-avgwe0.75-s
+g2-350 angular 3lupgma-avgwe0.75-c
+
+g2-250 angular 3lupgma-avgwe0.75-a
+g2-250 angular 3lupgma-avgwe0.75-s
+g2-250 angular 3lupgma-avgwe0.75-c
+
+g2-150 angular 3lupgma-avgwe0.75-a
+g2-150 angular 3lupgma-avgwe0.75-s
+g2-150 angular 3lupgma-avgwe0.75-c
+
+g2-450 angular 3lupgma-avgwe0.75-a
+g2-450 angular 3lupgma-avgwe0.75-s
+g2-450 angular 3lupgma-avgwe0.75-c
+

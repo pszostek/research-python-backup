@@ -1,0 +1,83 @@
+g0 tv upgma-a-a
+g1 angular upgma-a-a
+g0 tv upgma-a-s
+g1 angular upgma-a-s
+g0 tv upgma-a-c
+g1 angular upgma-a-c
+g0 tv 3lupgma-a-a
+g1 angular 3lupgma-a-a
+g0 tv 3lupgma-a-c
+g1 angular 3lupgma-a-c
+g0 tv 3lupgma-a-s
+g1 angular 3lupgma-a-s
+
+
+g2-50 angular upgma-a-a
+g2-100 angular upgma-a-a
+g2-200 angular upgma-a-a
+g2-300 angular upgma-a-a
+g2-400 angular upgma-a-a
+g2-500 angular upgma-a-a
+
+g2-50 angular upgma-a-s
+g2-100 angular upgma-a-s
+g2-200 angular upgma-a-s
+g2-300 angular upgma-a-s
+g2-400 angular upgma-a-s
+g2-500 angular upgma-a-s
+
+g2-50 angular upgma-a-c
+g2-100 angular upgma-a-c
+g2-200 angular upgma-a-c
+g2-300 angular upgma-a-c
+g2-400 angular upgma-a-c
+g2-500 angular upgma-a-c
+
+
+
+g2-25 angular 3lupgma-a-a
+g2-25 angular 3lupgma-a-s
+g2-25 angular 3lupgma-a-c
+
+g2-50 angular 3lupgma-a-a
+g2-50 angular 3lupgma-a-s
+g2-50 angular 3lupgma-a-c
+
+g2-100 angular 3lupgma-a-a
+g2-100 angular 3lupgma-a-s
+g2-100 angular 3lupgma-a-c
+
+g2-200 angular 3lupgma-a-a
+g2-200 angular 3lupgma-a-s
+g2-200 angular 3lupgma-a-c
+
+g2-300 angular 3lupgma-a-a
+g2-300 angular 3lupgma-a-s
+g2-300 angular 3lupgma-a-c
+
+g2-400 angular 3lupgma-a-a
+g2-400 angular 3lupgma-a-s
+g2-400 angular 3lupgma-a-c
+
+g2-500 angular 3lupgma-a-a
+g2-500 angular 3lupgma-a-s
+g2-500 angular 3lupgma-a-c
+
+
+
+g2-350 angular 3lupgma-a-a
+g2-350 angular 3lupgma-a-s
+g2-350 angular 3lupgma-a-c
+
+g2-250 angular 3lupgma-a-a
+g2-250 angular 3lupgma-a-s
+g2-250 angular 3lupgma-a-c
+
+g2-150 angular 3lupgma-a-a
+g2-150 angular 3lupgma-a-s
+g2-150 angular 3lupgma-a-c
+
+g2-450 angular 3lupgma-a-a
+g2-450 angular 3lupgma-a-s
+g2-450 angular 3lupgma-a-c
+
