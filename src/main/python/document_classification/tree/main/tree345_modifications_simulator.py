@@ -1,3 +1,4 @@
+"""For given tree tries several modifications and checks behavior of similarity indexes."""
 
 
 
