@@ -27,7 +27,7 @@ def get_selected_indexes(leaf2clusters, leaf2clusters2,\
     selected_indexes = set(selected_indexes)
     index2value = {}
     
-    print "[get_selected_indexes] = ",selected_indexes
+    #print "[get_selected_indexes] = ",selected_indexes
     
     ###############################################################################################################################
 
