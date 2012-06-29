@@ -9,7 +9,7 @@ def process_file(filename):
     elem.text = id
     tree.write(filename)
 
-indir = r"C:\Users\ICM\Desktop\to-test"
+indir = r"C:\Users\matfed\Desktop\training\todb"
 
 for f in glob.glob(os.path.join(indir, "*.xml")):
     process_file(f)

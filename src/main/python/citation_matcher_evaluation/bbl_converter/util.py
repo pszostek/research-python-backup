@@ -23,6 +23,11 @@ def decode_utf(s):
     return "".join(result)
 
 def untexify(s):
+    mathin = re.compile(r'(^|[^\\])\\[\[\]]')
+    while True:
+        (s, n) = mathin.subn(r'\1 ', s)
+        if n == 0: break
+
     brackets = re.compile(r'(^|[^\\])[{}\[\]]')
     while True:
         (s, n) = brackets.subn(r'\1', s)

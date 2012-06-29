@@ -206,9 +206,13 @@ def parse_revcompchem(text):
 
 def get_mixed_citations(filename, parsing_fun):
     for (no,ref,val) in read_citations(filename):
-        yield (no, format_ref(ref) + untexify(parsing_fun(decode_utf(val)))) 
+        yield (no, format_ref(ref) + untexify(parsing_fun(decode_utf(val))))
 
-indir = r'C:\Users\matfed\Desktop\training\bbls\\'
+def limit(generator, no):
+    for i in range(no):
+        yield generator.next() 
+
+indir = r'C:\Users\matfed\Desktop\bbls\\'
 
 files = [(r'abbrv.bbl', parse_abbrv),
          (r'acm.bbl', parse_acm),
@@ -223,7 +227,9 @@ files = [(r'abbrv.bbl', parse_abbrv),
 
 set = CitationSet()
 for i, (filename, parsing_fun) in enumerate(files, 1):
-    for k, v in get_mixed_citations(indir + filename, parsing_fun):
+    for k, v in limit(get_mixed_citations(indir + filename, parsing_fun), 100):
         set.add(str(int(k) + i * 10000), v)
-set.write_nlm(r'C:\Users\matfed\Desktop\training.xml')
+#set.write_nlm(r'C:\Users\matfed\Desktop\training.xml')
+set.write_txt(r'C:\Users\matfed\Desktop\parsertest.txt')
+set.write_mapfile(r'C:\Users\matfed\Desktop\parsertest_map.txt')
 pass

@@ -58,6 +58,8 @@ class ResultSet:
         return sum(map(lambda (x, y): x > -1, self.results))
     def count_matched_nonempty(self):
         return sum(map(lambda (x, y): y > -1, self.results))
+    def get_correct_nonempty(self):
+        return filter(lambda (x, y): x == y and x > -1, self.results)
     def count_correct_nonempty(self):
         return sum(map(lambda (x, y): x == y and x > -1, self.results))
     def compute_percision_nonempty(self):
@@ -116,6 +118,12 @@ class InternalMapping:
                 self.mapping[cells[2]] = cells[1]
     def internalToId(self, internal):
         return int(self.mapping[internal]) if internal != 'None' else -1
+    def correctToExpected(self, correct):
+        return int(correct) if int(correct) <= 1000 else -1
+
+class EmptyInternalMapping:
+    def internalToId(self, internal):
+        return int(internal) if internal != 'None' else -1
     def correctToExpected(self, correct):
         return int(correct) if int(correct) <= 1000 else -1
 
