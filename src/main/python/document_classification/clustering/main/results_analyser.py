@@ -45,10 +45,12 @@ def format_linkage_str(linkage):
         
 def format_clustering_str(clustering_str):        
     clustering_parts = clustering_str.split("-")
-    if clustering_parts[0] == "3lupgma":
-        clustering_parts[0] = "upgma 3levels"
+    if clustering_parts[0] == "upgma":
+        clustering_parts[0] = "hierarchical"
+    elif clustering_parts[0] == "3lupgma":
+        clustering_parts[0] = "3-level hierarchical"
     elif  clustering_parts[0] == "3lkmedoids":
-        clustering_parts[0] = "kmedoids 3levels"
+        clustering_parts[0] = "3-level kmedoids"
     return format_linkage_str(clustering_parts[1])+"\t"+format_linkage_str(clustering_parts[2])+"\t"+clustering_parts[0]
     
 def format_similarity_str(similarity_str, mapping = {}):
