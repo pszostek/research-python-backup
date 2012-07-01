@@ -31,15 +31,13 @@ def extract_agg_table(lines, skip_header=True, separator="\t"):
         keys        = reduce(lambda l1,l2: l1+separator+l2, (cols[colno] for colno in row_label_cols) )        
         full_key    = (keys, agg_key)
 
-        table_row   = agg_table.get(full_key, {} )
-        try:
-            all_cols = list(float(cols[colno].replace(",", ".")) for colno in val_cols)
-            touple = (all_cols[0], all_cols[1])
-            table_row["agg"] = table_row.get("agg", []) + [ touple ]            
-            agg_table[full_key] = table_row
-        except:
-            pass
-    print agg_table
+        table_row   = agg_table.get(full_key, {} )        
+        for colno in val_cols:
+            try:
+                table_row[colno] = table_row.get(colno, []) + [ float(cols[colno].replace(",", ".")) ]
+            except:
+                pass            
+        agg_table[full_key] = table_row            
     return agg_table
 
 def _safe_aggregator_(col_vals, aggregator):
