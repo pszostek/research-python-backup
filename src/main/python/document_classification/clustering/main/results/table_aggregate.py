@@ -3,6 +3,13 @@
 import sys,os
 from data_maketable import *
 
+
+sys.path.append(r'../')
+sys.path.append(r'../../')
+sys.path.append(r'../../../')
+
+from tools.stats import *
+
 def extract_prefix(colvalue):
     i = -1
     for i in xrange(len(colvalue)-1, 0, -1):
@@ -25,13 +32,14 @@ def extract_agg_table(lines, skip_header=True, separator="\t"):
         full_key    = (keys, agg_key)
 
         table_row   = agg_table.get(full_key, {} )
-        for colno in val_cols:
-            try:
-                numeric_value = float(cols[colno].replace(",", "."))                
-                table_row[colno] = table_row.get(colno, []) + [ numeric_value ] 
-            except:
-                pass
-        agg_table[full_key] = table_row
+        try:
+            all_cols = list(float(cols[colno].replace(",", ".")) for colno in val_cols)
+            touple = (all_cols[0], all_cols[1])
+            table_row["agg"] = table_row.get("agg", []) + [ touple ]            
+            agg_table[full_key] = table_row
+        except:
+            pass
+    print agg_table
     return agg_table
 
 def _safe_aggregator_(col_vals, aggregator):
@@ -44,7 +52,8 @@ def _safe_aggregator_(col_vals, aggregator):
 def calc_aggregation(agg_table, separator="\t", aggregator = max):
     table = {}
     for (rowkey1,rowkey2), col_data in agg_table.iteritems():        
-        table[rowkey1+separator+rowkey2] = dict( (col_label, _safe_aggregator_(col_vals, aggregator)) for col_label, col_vals in col_data.iteritems())
+        #print "------->", col_data["agg"]
+        print (rowkey1,rowkey2), max(col_data["agg"])
     return table
 
 
@@ -75,11 +84,22 @@ if __name__=="__main__":
         print "Numbers of columns to be interpreted as values expected as an argument of the program."
         sys.exit(-1)        
 
-
+    try:
+        aggregation_name = sys.argv[4]
+        if aggregation_name == "max": 
+            aggregator = max
+        elif aggregation_name == "min": 
+            aggregator = min
+        elif  aggregation_name == "avg": 
+            aggregator = avg
+        print "Aggregator =",aggregator
+    except:
+        print "Aggregation name (max/min/avg) expected as an argument."
+        sys.exit(-1)
 
     skip_header = 1
     try:
-        skip_header = int(sys.argv[3])
+        skip_header = int(sys.argv[5])
     except:
         pass
     skip_header = skip_header!=0
@@ -88,8 +108,9 @@ if __name__=="__main__":
     #################################################################################################
 
     agg_table = extract_agg_table(fin.xreadlines(), skip_header, SEPARATOR)
-    table = calc_aggregation(agg_table, SEPARATOR, aggregator = max)
-
+    table = calc_aggregation(agg_table, SEPARATOR, aggregator)
+    
+    print table
     print_table(fout, table, val_cols)
         
 
