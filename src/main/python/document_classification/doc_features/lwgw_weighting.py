@@ -5,7 +5,10 @@ import sys, pickle
 import tempfile                 
 
 sys.path.append(r'../')
-import zbl_io
+sys.path.append(r'../../')
+import data_io
+from data_io import *
+from data_io import zbl_io
 import math
 
 import logging

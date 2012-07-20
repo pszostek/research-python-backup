@@ -23,6 +23,7 @@ from zbl_gensim_process_file import *
 from zbl_mscmembership_process_file import *
 from zbl_fields_process_file import *
 from doc_features.lwgw_weighting import *
+from doc_features.ngrams import *
 
 from zbl_extract_graph import * 
 
@@ -145,42 +146,7 @@ def keep_authors(fin, fout):
         fout.write("\n")    
         counter = counter + 1 
     return counter
-
-
-def build_ngrams(words, n = 2, ngram_separator = '-'):
-    """Converts single words into n-grams by merging words."""
-    ngrams = [ reduce(lambda w1,w2: w1+ngram_separator+w2, words[i:i+n]) for i in xrange(len(words)-n+1) ]
-    return ngrams 
-    
-def build_ngrams_with_endings(words, n = 2, ngram_separator = '-'):
-    """Converts single words into n-grams by merging words.
-
-    Keeps shorter n-grams at the ending.
-    """
-    ngrams = [ reduce(lambda w1,w2: w1+ngram_separator+w2, words[i:i+n]) for i in xrange(len(words)) ]
-    return ngrams 
-
-
-def build_ngrams_file(fin, fout, list_of_fields, n = 2, ngram_separator = '-', keep_endings = False):
-    """Converts single words in selected fields into n-grams by merging words."""
-    if keep_endings:
-        ngram_calculator = build_ngrams_with_endings
-    else:
-        ngram_calculator = build_ngrams
-    #print "[build_ngrams_file] ngram_calculator =",ngram_calculator
-
-    for record in zbl_io.read_zbl_records(fin):
-        for field in list_of_fields:
-            if not record.has_key(field): continue
-            words = record[field].split()
-            ngrams = ngram_calculator(words, n, ngram_separator)
-            if len(ngrams) <= 0: 
-                logging.warn("No "+str(n)+"-grams found in an="+str(record[zbl_io.ZBL_ID_FIELD])+" in field "+ str(field)+ "="+str(record[field])+". Using single words instead.")
-                ngrams = words
-            record[field] = reduce(lambda w1,w2: (w1)+' '+(w2), ngrams)
-        zbl_io.write_zbl_record(fout, record)
-        fout.write("\n")
-                                                
+                   
                 
 
         
@@ -299,8 +265,9 @@ FILTER_AUTHOR_FINGERPRINTS_CMD_NAME = '-af'
 FILTER_TEXT = '-filter'    
 STEMMING = '-stemming'
 NGRAMS = '-ngram'
-NGRAMS2 = '-ngram2'         
-       
+NGRAMS2 = '-ngram2'       
+MGRAMS = '-mgram'  
+
 GENSIM_DICT = '-gensim_dict'    
 GENSIM_MAP = '-gensim_map'
 GENSIM_TFIDF = '-gensim_tfidf'
@@ -378,7 +345,7 @@ if __name__ == "__main__":
         elif cmd == STEMMING:            
             method = sys.argv[4]
             list_of_fields = sys.argv[5].split(',')
-        elif cmd == NGRAMS or cmd == NGRAMS2:
+        elif cmd == MGRAMS or cmd == NGRAMS or cmd == NGRAMS2:
             n = int(sys.argv[4])
             list_of_fields = sys.argv[5].split(',')
             try:
@@ -546,34 +513,35 @@ if __name__ == "__main__":
         print FILTER_RECORDS_WITH_FIELDS, "[list-of-fields] - keeps only those records that have all fields in list-of-fields (separated by ,)"
         print EXTRACT_FIELD_CMD_NAME, '[field-name] - keeps only field of field-name in records'
         print EXTRACT_FIELDVAL_CMD_NAME, '[field-name] - extracts value of field of field-name from records'
-
+        print '--------------------------------'
         print FILTER_ID_CMD_NAME, "[id-list-file] - removes records of id contained in id-list-file (single id per line)"
         print KEEP_ID_CMD_NAME, "[id-list-file] - keeps records of id contained in id-list-file (single id per line)"
         print FILTER_ID_DUPLICATES_CMD_NAME, " - removes records with id duplicated"    
         print APPEND_FILE_CMD_NAME, "[append-file-path] - appends append-file-path file to source file"
         print CPY_FILE_CMD_NAME, " - copies file from source to destination"
-        
+        print '--------------------------------'
         print EXTRACT_AUTHORS_CMD_NAME, ' - keeps just authors information (fields: au, ai)'
         print FILTER_AUTHOR_FINGERPRINTS_CMD_NAME, ' - removes from records empty af (only "-" values) fields'
-        
+        print '--------------------------------'
         print FILTER_TEXT, '[list-of-fields] - filters fields from list-of-fields (separated by ,) - removes punctuation and words from stoplist.'
         print STEMMING, '[method] [list-of-fields] - stems fields from list-of-fields using given method (lancaster/porter/wordnet)'   
-        print NGRAMS,"/",NGRAMS2, '[n-value] [list-of-fields] [ngrams-separator (opt)] - converts single words in fields (separated by ,) into ngrams (connected with ngrams-separator)' 
-        
+        print NGRAMS,"/",NGRAMS2, '[n-value] [list-of-fields] [ngrams-separator (opt)] - converts single words in fields (separated by ,) into ngrams (connected with ngrams-separator)'
+        print MGRAMS, '[max-n-value] [list-of-fields] [ngrams-separator (opt)] - converts single words in fields (separated by ,) into multi-ngrams (connected with ngrams-separator)' 
+        print '--------------------------------'
         print GENSIM_DICT, '[list-of-fields] [filter-by-fields (opt)] [gen-sim-dict-pickle (opt)] [min word freq in corpora (opt)] - builds and pickles gensim dictionary (token->id)'
         print GENSIM_MAP, '[list-of-fields] [filter-by-fields (opt)] [gen-sim-dict-pickle (opt)] [dst-field-name (opt)] - merges selected fields and maps them using gensim-dictionary (results stored as additional field)'
         print GENSIM_TFIDF, '[gen-sim-tfidf-model-pickle (opt)] [src-field-name (opt)] - builds and pickles gensim tfidf model'
         print GENSIM_TFIDFMAP, '[gen-sim-tfidf-model-pickle (opt)] [src-field-name (opt)] [dst-field-name (opt)] - calculates TFIDF for src-field and stores into dst-field'
         print GENSIM_LDA,"/",GENSIM_LSA,"[num_topics (opt)] [id:weight-field-name (opt)] [gensim-dict-pickle-path (opt)] [gensim-semantic-pickle-path (opt)]  [topics-log-path (opt)] - builds LDA/LSA model"
         print GENSIM_SEMANTIC_MAP,"[id:weight-src-field-name (opt)] [id:weight-dst-field-name (opt)] [gensim-semantic-model-pickle-path (opt)] - calculates weights using semantic-model"
-        
+        print '--------------------------------'
         print WD_MODEL, "[id:count-src-field-name (opt)] [words-docs-model-pickle-path (opt)] builds words x docs model"
         print WD_MAP, "[mode:tf-idf/tf-ent/wf-idf/...] [id:count-src-field-name (opt)] [words-docs-model-pickle-path (opt)] [id:weight-dst-field-name (opt)] maps words' counts into words' weights using model"
-        
+        print '--------------------------------'
         print MSC_MODEL, "[msc-model-pickle-path (opt)] [msc-values-field-name (opt)] calculates msc-counts"
         print MSC_MEMBERSHIP, "[msc-model-pickle-path (opt)] [msc-values-field-name (opt)] [dst-membership-field-name (opt)] [msc-codes-filter:0=all,1=ordinary,2=special (opt)] calculates msc-membership"
         #print MSC_FILTER_RECORDS , "[msc-model-pickle-path (opt)] [min-count (opt)] keeps only those records for which primary code occurrs at least min-count times."
-        
+        print '--------------------------------'
         print CI_GRAPH, "extracts citations graph from source file"
         print DL_CI_GRAPH, "extracts citations graph from source file (connections are both ways)"
         print AF_GRAPH, "extracts common-authorship graph from source file"
@@ -645,6 +613,11 @@ if __name__ == "__main__":
             print "ngram-separator = <", ngram_separator,">"
             print "keep-endings =",keep_endings
             build_ngrams_file(fin, fout, list_of_fields, n, ngram_separator, keep_endings)
+        elif cmd == MGRAMS:  
+            print "List of fields to be processed = ", list_of_fields
+            print "Max-n-value = ", n
+            print "ngram-separator = <", ngram_separator,">"            
+            build_mgrams_file(fin, fout, list_of_fields, n, ngram_separator)            
         elif cmd == GENSIM_DICT:
             print "list of fields to be merged and converted=",list_of_fields   
             print "filter_by_fields=",filter_by_fields
