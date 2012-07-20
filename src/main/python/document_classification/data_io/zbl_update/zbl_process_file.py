@@ -22,7 +22,7 @@ from doc_features.semantic_gensim_readers import *
 from zbl_gensim_process_file import *
 from zbl_mscmembership_process_file import *
 from zbl_fields_process_file import *
-from zbl_tfidflike_process_file import *
+from doc_features.lwgw_weighting import *
 
 from zbl_extract_graph import * 
 

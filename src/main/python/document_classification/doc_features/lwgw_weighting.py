@@ -1,3 +1,4 @@
+"""LWxGW (TFxIDF like) weighting methods."""
 from __future__ import division
 
 import sys, pickle
