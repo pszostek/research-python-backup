@@ -144,7 +144,7 @@ def keep_submatrix_ids_file(fin, fout, argv):
         
     ids = set( line.strip() for line in open(ids_path).xreadlines() if len(line.strip())>0 )
     print " [keep_submatrix_ids_file]",len(ids),"ids loaded =",str(ids)[:100]
-    print " [keep_submatrix_ids_file] ids=",str(ids[:30])[:100]
+    print " [keep_submatrix_ids_file] ids=",str(list(ids)[:30])[:100]
     
     rows = __read_tabs__(fin)        
     cols = __read_tabs__(fin)
@@ -157,7 +157,7 @@ def keep_submatrix_ids_file(fin, fout, argv):
     
     kept_rows = 0
     for i,row in enumerate(rows):
-        if i%1000 == 0: print " [keep_submatrix_ids_file]",i," rows processed."
+        if i%10 == 0: print " [keep_submatrix_ids_file]",i," rows processed.",kept_rows," kept"
         row_data = __read_tabs__(fin)
         if not row in ids: continue
         __write_tabs__(fout, (row_data[ix] for ix in col_ixs) )
