@@ -143,18 +143,26 @@ def keep_submatrix_ids_file(fin, fout, argv):
         sys.exit(-1)
         
     ids = set( line.strip() for line in open(ids_path).xreadlines() if len(line.strip())>0 )
-    print "",len(ids),"ids loaded =",str(ids)[:100]
+    print " [keep_submatrix_ids_file]",len(ids),"ids loaded =",str(ids)[:100]
+    print " [keep_submatrix_ids_file] ids=",str(ids[:30])[:100]
     
-    rows = __read_tabs__(fin)    
-    cols = __read_tabs__(fin)    
+    rows = __read_tabs__(fin)        
+    cols = __read_tabs__(fin)
+    print " [keep_submatrix_ids_file] rows=",str(rows[:30])[:100]    
+    print " [keep_submatrix_ids_file] cols=",str(cols[:30])[:100]    
     __write_tabs__(fout, (row for row in rows if row in ids))
     __write_tabs__(fout, (col for col in cols if col in ids))
     
     col_ixs = list(ix for ix,col in enumerate(cols) if col in ids)        
-    for row in rows:
+    
+    kept_rows = 0
+    for i,row in enumerate(rows):
+        if i%1000 == 0: print " [keep_submatrix_ids_file]",i," rows processed."
         row_data = __read_tabs__(fin)
         if not row in ids: continue
         __write_tabs__(fout, (row_data[ix] for ix in col_ixs) )
+        kept_rows = kept_rows + 1
+    print " [keep_submatrix_ids_file]",kept_rows,"rows kept"
     
 def test_simmatrix_file(fin, fout, argv):    
     rows = __read_tabs__(fin)    
