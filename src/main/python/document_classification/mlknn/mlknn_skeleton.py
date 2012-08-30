@@ -51,11 +51,13 @@ class MlknnSkeleton(object):
         #for each record compute
         elem_cnt = 0
         for r in tobjects:
+            #print "[MLKNNSKELETON:calculate_label_counts] considering:", r
             elem_cnt+=1
             if elem_cnt%100 == 1:
                 printer("[MlknnSkeleton][__get_posterior_probabilities]: training in step: "+str(elem_cnt))
 
             rlabels = get_labels(r)
+            #print "[MLKNNSKELETON:calculate_label_counts] rlabels:", rlabels
             d = {}
 
             for ind, neighbhour in enumerate(find_nearest_neighbours(r, k)):

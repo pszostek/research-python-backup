@@ -69,7 +69,7 @@ class MlknnThreshold(mlknn_skeleton.MlknnSkeleton):
         self.c, self.c_prim = super(MlknnThreshold, self).calculate_label_counts(self.tobjects, self.labels, 
                                                                    self.find_nearest_neighbours, k,
                                                                    self.get_labels, self.kernel, self.printer)
-        self.fraction_knn_thresholds, self.fmeasure_per_class = self.__calculate_thresholds()
+        self.fraction_knn_thresholds, self.fmeasure_per_class = self.calculate_thresholds(self.c, self.c_prim)
 
 #-------------------------------------------TRAINING-----------------------------------------------#
     

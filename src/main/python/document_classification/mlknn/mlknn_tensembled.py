@@ -23,8 +23,8 @@ class MlknnTEnsembled(mlknn_threshold.MlknnThreshold):
     calculate a priori and a posteriori probabilities.
     '''
 
-    def __init__(self, tobjects, find_nearest_neighbours, k_list, get_labels, kernel, printer, 
-                 obj_id = 'an', neigh_events = None):#range(k+2)):
+    def __init__(self, tobjects, find_nearest_neighbours, k_list, get_labels, kernel, printer, #obj_id = 'an', 
+                 neigh_events = None):#range(k+2)):
         '''
         Constructor.
         
@@ -56,7 +56,7 @@ class MlknnTEnsembled(mlknn_threshold.MlknnThreshold):
         self.get_labels = get_labels
         self.kernel = kernel
         self.printer = printer
-        self.obj_id = obj_id
+        #self.obj_id = obj_id
         self.neigh_events = [range(k+2) for k in k_list]#neigh_events
         if neigh_events:
             self.neigh_events = neigh_events
@@ -67,28 +67,53 @@ class MlknnTEnsembled(mlknn_threshold.MlknnThreshold):
         self.printer(str(self.labels))
         
         #for each object calculate nearest neighbours in a sorted order
-        nearest_neighbours = {}
+        nearest_neighbours = []
         for obj in self.tobjects:
-            nearest_neighbours[obj[self.obj_id]] = self.find_nearest_neighbours(obj, self.max_k)
-        def find_nearest_neighbours_from_list(obj, k):
-            return nearest_neighbours[obj[self.obj_id]][:k]
-        
+            nearest_neighbours.append(self.find_nearest_neighbours(obj, self.max_k))
+        def find_nearest_neighbours_from_list(ind, k):
+            return nearest_neighbours[ind][:k]
+        def get_labels_from_list(ind):
+            if type(ind) == int:
+                return self.get_labels(self.tobjects[ind])
+            else:
+                return self.get_labels(ind)
         #calculate the counts and threshold scores
         self.c, self.c_prim = {}, {}
         self.fraction_knn_thresholds, self.fmeasure_per_class = {}, {}
         for k in self.k_list:
-            self.c[k], self.c_prim[k] = self.calculate_label_counts(self.tobjects, self.labels, 
+            self.c[k], self.c_prim[k] = self.calculate_label_counts(xrange(len(self.tobjects)), self.labels, 
                                                                    find_nearest_neighbours_from_list, k,
-                                                                   self.get_labels, self.kernel, self.printer)
+                                                                   get_labels_from_list, self.kernel, self.printer)
             self.fraction_knn_thresholds[k], self.fmeasure_per_class[k] = self.calculate_thresholds(self.c[k], self.c_prim[k])
 
+            
+            """
+            ctmp, c_primtmp = self.calculate_label_counts(self.tobjects, self.labels, 
+                                                                   self.find_nearest_neighbours, k,
+                                                                   self.get_labels, self.kernel, self.printer)
+            fraction_knn_thresholdstmp, fmeasure_per_classtmp = self.calculate_thresholds(ctmp, c_primtmp)
+
+            if self.c[k] != ctmp:
+                print "NOT EQUAL!!!"
+                print "self.c[k], ctmp:", self.c[k], ctmp
+            if self.c_prim[k] != c_primtmp:
+                print "NOT EQUAL!!!"
+                print "self.c_prim[k] != c_primtmp:", self.c_prim[k], c_primtmp
+            if self.fraction_knn_thresholds[k] != fraction_knn_thresholdstmp:
+                print "NOT EQUAL!!!"
+                print "self.fraction_knn_thresholds[k] != fraction_knn_thresholdstmp:", self.fraction_knn_thresholds[k], fraction_knn_thresholdstmp
+            if self.fmeasure_per_class[k] != fmeasure_per_classtmp:
+                print "NOT EQUAL!!!"
+                print "self.fmeasure_per_class[k] != fmeasure_per_classtmp:", self.fmeasure_per_class[k], fmeasure_per_classtmp
+            """ 
+                
         self.code2threshold = {}
         self.code2fmeasure = {}
         self.code2k = {}
         for code in self.labels:
-            self.code2threshold[code] = None
-            self.code2fmeasure[code] = None
-            self.code2k[code] = None
+            self.code2threshold[code] = -1
+            self.code2fmeasure[code] = -1
+            self.code2k[code] = -1
         
         for code in self.labels:
             for k in self.k_list:
@@ -97,10 +122,32 @@ class MlknnTEnsembled(mlknn_threshold.MlknnThreshold):
                     self.code2threshold[code] = self.fraction_knn_thresholds[k][code]
                     self.code2k[code] = k
         
+        """
+        #for testing reasons:
+        from mlknn_ensembled_fractional import MlKnnFractionalEnsembledStrongest
+        from find_closest_points import find_closest_points
+        from txt_cosine_distance import TxtCosineDistance
+        d = TxtCosineDistance('g1')
+        mk2 = MlKnnFractionalEnsembledStrongest(lambda: tobjects, d, find_closest_points, k_list, get_labels)
+        #tobjects, find_nearest_neighbours, k_list, get_labels, kernel, printer,
         print "self.code2threshold:", self.code2threshold
         print "self.code2fmeasure:", self.code2fmeasure
         print "self.code2k:", self.code2k
+        print "------------------------------------"
+        print "===OLD:==="
+        for k in self.k_list:
+            print "mk2.mlknn_fractionals.fmeasure_per_class:", mk2.mlknn_fractionals.fmeasure_per_class
+            print "fraction_knn_thresholds:", fraction_knn_thresholds
         
+        print "===NEW:==="
+        """
+        #for k in self.k_list:
+            #print "self.fmeasure_per_class[k]:", k, self.fmeasure_per_class[k]
+            #print "self.fraction_knn_thresholds[k]:", k, self.fraction_knn_thresholds[k]
+        #print "self.code2threshold:", self.code2threshold 
+        #print "self.code2fmeasure:", self.code2fmeasure
+        #print "self.code2k:", self.code2k
+        #"""
 #-------------------------------------------CLASSIFYING-----------------------------------------------#
     def classify(self, sample):
         '''
@@ -113,9 +160,9 @@ class MlknnTEnsembled(mlknn_threshold.MlknnThreshold):
             return nearest_neighbours[:k]
         
         for code in self.labels:
-            neigh_codes =  self.count_neighbours_per_code(sample, self.find_nearest_neighbours, self.code2k[code], self.get_labels, self.kernel)
+            neigh_codes =  self.count_neighbours_per_code(sample, find_nearest_neighbours_from_list, self.code2k[code], self.get_labels, self.kernel)
         
             #print '[MLKNNFRACTIONAL] code neigh_codes.get(code, 0), self.fraction_knn_thresholds[code]', code, neigh_codes.get(code, 0), self.fraction_knn_thresholds[code]
-            if neigh_codes.get(code, 0) > self.code2threshold[code]:
+            if neigh_codes.get(code, 0) >= self.code2threshold[code]:
                 answer.append(code)
         return answer

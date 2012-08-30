@@ -108,14 +108,15 @@ class MlknnBasic(mlknn_skeleton.MlknnSkeleton):
             sum_c = sum(c[code].itervalues())
             sum_c_prim = sum(c_prim[code].itervalues())
             #print "[MLKNN_BASIC]: code:", code, "sum_c", sum_c, "sum_c_prim:", sum_c_prim
-            for i in self.neigh_events:#c[code].iterkeys():
+            for i in self.neigh_events[:-1]:#c[code].iterkeys():
                 peh_true[code][i] = (self.smoothing_param + c[code].get(i, 0))/(self.smoothing_param * (self.k + 2) + sum_c)
                 #print "i:", i, "peh_true[code][i]:", peh_true[code][i]
             #for i in c_prim[code].iterkeys():
                 peh_false[code][i] = (self.smoothing_param + c_prim[code].get(i, 0))/(self.smoothing_param * (self.k + 2) + sum_c_prim) 
                 #print "i:", i, "peh_true[code][i]:", peh_true[code][i]
                 #print "i:", i, "peh_false[code][i]:", peh_false[code][i]
-            
+            i = self.neigh_events[-1]
+            peh_false[code][i] = (self.smoothing_param + sum(c_prim[code][j] for j in c_prim[code].keys()[i:]))/(self.smoothing_param * (self.k + 2) + sum_c_prim) 
         return peh_true, peh_false
     
 #-------------------------------------------CLASSIFYING-----------------------------------------------#
@@ -125,6 +126,10 @@ class MlknnBasic(mlknn_skeleton.MlknnSkeleton):
         In Bayes algorithm it suffices to compare them to get the answer wether to assign
         the code or not.
         '''
+        #if neighbouring_value exceeds the maximum neighbours, project it to the maximum key
+        #explanation: we only check for the [0, .., k] neighbours. If there is more, we project all such cases to 'k+1' situation
+        #why? because such events are sparse and we would get zeroes in counts
+        neighbouring_value = min(neighbouring_value, max(self.posteriorprobabilities_true[code].iterkeys()))
         tproba = self.labelprobabilities[code]*self.posteriorprobabilities_true[code][neighbouring_value]
         fproba = self.labelcounterprobabilities[code]*self.posteriorprobabilities_false[code][neighbouring_value]
         return tproba, fproba
