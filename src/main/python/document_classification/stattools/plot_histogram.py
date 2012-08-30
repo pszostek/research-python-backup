@@ -6,7 +6,7 @@ Created on Apr 21, 2012
 @author: mlukasik
 '''
 from matplotlib import pyplot
-
+"""
 #kodow msc na dokument:
 d = {16: 1,
 12: 2,
@@ -149,18 +149,16 @@ d = {71 : 1,
 1 : 1172}
 l = reduce(lambda x, y: x+y, [[j]*i for i, j in d.iteritems()])
 
-"""
 
-"""
+
 #print "l:", l
 n, bins, patches = pyplot.hist(l, bins = 50, log=True, rwidth = 1.0)#, histtype='bar')
 
 #pyplot.axis([0, 1200, 1, 10000])
-pyplot.xlabel("Liczba wystapien kodu w korpusie.")
-pyplot.ylabel("Liczba roznych kodow MSC.")
+pyplot.xlabel("Number of occurences of a code.")#Liczba wystapien kodu w korpusie.")
+pyplot.ylabel("Number of distinct MSC codes.")#Liczba roznych kodow MSC.")
 #pyplot.title("Ilosci kodow MSC o danej liczbie wystapien w korpusie.")
 pyplot.show()
-
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -181,10 +179,12 @@ ax.set_xticklabels(counts)
 
 plt.bar(pos, num_of_docs, width, color='b', log=True)
 
-pyplot.xlabel("Liczba kodow opisujacych dokument.")
+pyplot.xlabel("Number of codes describing a document")#Liczba kodow opisujacych dokument.")
 #pyplot.xlabel("Liczba kodow o takiej wlasnosci.")
-pyplot.ylabel("Liczba dokumentow.")
+pyplot.ylabel("Number of documents")#Liczba dokumentow.")
 #pyplot.ylabel("Liczba wystapien kodow w korpusie.")
 #pyplot.title("Liczby kodow o danej licznie wystapien.")
 
 plt.show()
+
+"""
