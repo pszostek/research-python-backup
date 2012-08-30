@@ -7,8 +7,8 @@ Evaluation of a multilabel classifier.
 '''
 from __future__ import division
 
-def PRINTER_ONSCREEN(x):
-    print x
+#def PRINTER_PARAM(x):
+#    print x
 
 def PRINTER_LOG(x):
     #import logging
@@ -16,7 +16,7 @@ def PRINTER_LOG(x):
     #print x#PRINTER x#PRINTER_LOG(x)
     pass
 
-def multilabel_evaluate(test_generator, classify_oracle, classify_try, labels_len, label_functions = {'full label': lambda x: x}):
+def multilabel_evaluate(test_generator, classify_oracle, classify_try, labels_len, label_functions = [('full label', lambda x: x)]):
     '''
     Evaluate a multi-label classifier, comparing its results against the oracle classifier. 
     
@@ -39,7 +39,7 @@ def multilabel_evaluate(test_generator, classify_oracle, classify_try, labels_le
     hammingloss = {}
     subset01loss = {}
     
-    for i, _ in label_functions.iteritems():
+    for i, _ in label_functions:
         accuracy[i] = 0
         precision[i] = 0
         recall[i] = 0
@@ -62,7 +62,7 @@ def multilabel_evaluate(test_generator, classify_oracle, classify_try, labels_le
         #PRINTER_LOG("[multilabel_evaluate]: oracle_ans: "+str(oracle_ans))
         
         #FOR EACH LABEL MAPPING FUNCTION:
-        for i, labelf in label_functions.iteritems():
+        for i, labelf in label_functions:
             #PRINTER_LOG("[multilabel_evaluate] i, labelf:"+str(i)+" "+str(labelf))
             #PRINTER_LOG("[multilabel_evaluate] map(labelf, classif_ans)):"+str(map(labelf, classif_ans)))
             
@@ -105,7 +105,7 @@ def multilabel_evaluate(test_generator, classify_oracle, classify_try, labels_le
             subset01loss[i] += int(zi_set != yi_set)
     
     #DIVIDE BY NUMBER OF SAMPLES:
-    for i in label_functions.iterkeys():
+    for i, _ in label_functions:
         accuracy[i] /= elements_count
         precision[i] /= elements_count
         recall[i] /= elements_count
@@ -132,7 +132,7 @@ def multilabel_evaluate_labelerrors(test_generator, classify_oracle, classify_tr
     #save number of true positives, false positives, true negatives, false negatives
     label2error = {}
     
-    for i, _ in label_functions.iteritems():
+    for i, _ in label_functions:
         label2error[i] = {}
         
     elements_count = 0
@@ -147,7 +147,7 @@ def multilabel_evaluate_labelerrors(test_generator, classify_oracle, classify_tr
         #PRINTER_LOG("[multilabel_evaluate]: oracle_ans: "+str(oracle_ans))
         
         #FOR EACH LABEL MAPPING FUNCTION:
-        for i, labelf in label_functions.iteritems():
+        for i, labelf in label_functions:
             #PRINTER_LOG("[multilabel_evaluate] i, labelf:"+str(i)+" "+str(labelf))
             #PRINTER_LOG("[multilabel_evaluate] map(labelf, classif_ans)):"+str(map(labelf, classif_ans)))
             
@@ -174,7 +174,7 @@ def multilabel_evaluate_labelerrors(test_generator, classify_oracle, classify_tr
     
     return label2error
 
-def multilabel_evaluate_printresults(test_generator, classify_oracle, classify_try, labels_len, label_functions, labels):
+def multilabel_evaluate_printresults(accuracy, precision, recall, hammingloss, subset01loss, fmeasure, PRINTER_PARAM):
     '''
     test_generator - function returning generator, which returns test instances
     classify_oracle - the TRUE labelling of a record, e.g. def classify_oracle(record) -> [label1, label2, label3]
@@ -187,32 +187,30 @@ def multilabel_evaluate_printresults(test_generator, classify_oracle, classify_t
     
     '''
     
-    accuracy, precision, recall, hammingloss, subset01loss, fmeasure = multilabel_evaluate(test_generator, classify_oracle, classify_try, labels_len, label_functions)
-    label2error = multilabel_evaluate_labelerrors(test_generator, classify_oracle, classify_try, labels_len, label_functions, labels)
+    #accuracy, precision, recall, hammingloss, subset01loss, fmeasure = multilabel_evaluate(test_generator, classify_oracle, classify_try, labels_len, label_functions)
+    #label2error = multilabel_evaluate_labelerrors(test_generator, classify_oracle, classify_try, labels_len, label_functions, labels)
     
-    PRINTER_ONSCREEN("=====================================================")
-    PRINTER_ONSCREEN("=================EVALUATION MEASURES=================")
-    PRINTER_ONSCREEN("=====================================================")
+    PRINTER_PARAM("=====================================================")
+    PRINTER_PARAM("=================EVALUATION MEASURES=================")
+    PRINTER_PARAM("=====================================================")
     
-    for i in label_functions.iterkeys():
-        PRINTER_ONSCREEN("=================Results for label function: "+str(i)+" =================")
-        PRINTER_ONSCREEN("Accuracy: "+str(accuracy[i]))
-        PRINTER_ONSCREEN("Precision: "+str(precision[i]))
-        PRINTER_ONSCREEN("Recall: "+str(recall[i]))
-        PRINTER_ONSCREEN("F-measure: "+str(fmeasure[i]))
-        PRINTER_ONSCREEN("Hammingloss: "+str(hammingloss[i]))
-        PRINTER_ONSCREEN("Subset01loss: "+str(subset01loss[i]))
+    for i in accuracy.keys():
+        PRINTER_PARAM("=================Results for label function: "+str(i)+" =================")
+        PRINTER_PARAM("\t".join(["Accuracy", "Precision", "Recall", 
+                                 "F-measure", "Hammingloss", "Subset01loss"]))
+        PRINTER_PARAM("\t".join(map(lambda x: str(int(10000*x)*1.0/100), [accuracy[i], precision[i], recall[i], 
+                                 fmeasure[i], hammingloss[i], subset01loss[i]])))
     
-    """PRINTER_ONSCREEN("=====================================================")
-    PRINTER_ONSCREEN("=================Errors on labels====================")
-    PRINTER_ONSCREEN("=====================================================")
+    """PRINTER_PARAM("=====================================================")
+    PRINTER_PARAM("=================Errors on labels====================")
+    PRINTER_PARAM("=====================================================")
     
     for i in label_functions.iterkeys():
-        PRINTER_ONSCREEN("=================Results for label function: "+str(i)+" =================")
+        PRINTER_PARAM("=================Results for label function: "+str(i)+" =================")
         for label, labeldict in label2error[i].iteritems():
-            PRINTER_ONSCREEN("Label: "+str(label))
-            PRINTER_ONSCREEN("\tTP: "+str(labeldict['TP']))
-            PRINTER_ONSCREEN("\tFP: "+str(labeldict['FP']))
-            PRINTER_ONSCREEN("\tTN: "+str(labeldict['TN']))
-            PRINTER_ONSCREEN("\tFN: "+str(labeldict['FN']))
+            PRINTER_PARAM("Label: "+str(label))
+            PRINTER_PARAM("\tTP: "+str(labeldict['TP']))
+            PRINTER_PARAM("\tFP: "+str(labeldict['FP']))
+            PRINTER_PARAM("\tTN: "+str(labeldict['TN']))
+            PRINTER_PARAM("\tFN: "+str(labeldict['FN']))
        """     

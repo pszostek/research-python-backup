@@ -12,7 +12,7 @@ from tools.tree_dfs_explorer import tree_dfs_explorer
 
 def PRINTER(x):
     #import logging
-    #logging.info([MlHierarchical]'+x)
+    #logging.info('[MlHierarchical]'+x)
     #print '[MlHierarchical]'+x
     pass
 
@@ -86,7 +86,7 @@ class MlHierarchical(object):
         PRINTER("[node_builder]: creating a root node on curr_depth: "+str(curr_depth)+" and child_id: "+str(child_id))
         #curr_level_frecords = lambda: map_frecords(lambda: gen_record_filteredbyprefix(records, child_id), lambda rec: record_mappings[curr_depth](rec))
         
-        PRINTER("[node_builder]: records: "+str(records()))
+        #PRINTER("[node_builder]: records: "+str(records()))
         return classifier(records, lambda x: self.get_labels_of_record_nested(x, curr_depth, child_id, classifier, label_mappings, get_labels_of_record))
     
     def children_splitter(self, records, curr_depth, child_id, label_mappings, get_labels_of_record):
@@ -98,7 +98,7 @@ class MlHierarchical(object):
         '''
         from collections import defaultdict
         children = defaultdict(lambda: [])
-        for child in records():
+        for child in records:
             inserted_codes = set()#so that we do not inserted same record twice to the same bucket
             #print '[children_splitter] record:', child, ' child_id:', child_id, 'curr_depth:', curr_depth
             for code in get_labels_of_record(child):#for each code of this record:
