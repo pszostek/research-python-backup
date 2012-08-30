@@ -44,7 +44,7 @@ def tree_dfs_builder(records, node_builder, children_splitter, max_depth, curr_d
         #for each child=classification code on that level
         for child_id in child_data.iterkeys():
             #PRINTER("[tree_dfs_builder]: child_id"+child_id)
-            node.children[child_id] = tree_dfs_builder(lambda: child_data[child_id], node_builder, children_splitter, max_depth, curr_depth+1, child_id, continue_deepening)
+            node.children[child_id] = tree_dfs_builder(child_data[child_id], node_builder, children_splitter, max_depth, curr_depth+1, child_id, continue_deepening)
             
     return node
 
