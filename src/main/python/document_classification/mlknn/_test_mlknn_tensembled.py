@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
         def printer(x):
             pass
         
-        mk = mlknn_tensembled.MlknnTEnsembled(lrecords, get_neighbours, k, get_labels_of_record, lambda x:1, printer, obj_id='ab')
+        mk = mlknn_tensembled.MlknnTEnsembled(lrecords, get_neighbours, k, get_labels_of_record, lambda x:1, printer)#, obj_id='ab')
         
         return mk
 
