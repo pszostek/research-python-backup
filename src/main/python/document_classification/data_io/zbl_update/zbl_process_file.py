@@ -288,6 +288,8 @@ DL_CI_GRAPH = '-dlcigraph'
 AF_GRAPH = '-afgraph'
 JN_GRAPH = '-jngraph'
     
+HF = "-hf"
+    
 if __name__ == "__main__":    
     #try:
     #    in_path = sys.argv[1]
@@ -475,7 +477,7 @@ if __name__ == "__main__":
             except:
                 leaf_pattern = msc_processing.MSC_ORDINARY_LEAF_PATTERN_RE
         elif cmd == FILTER_RECORDS_WITH_FIELDS:
-            list_of_fields = sys.argv[4].split(',')
+            list_of_fields = sys.argv[4].split(',')            
         elif cmd == WD_MODEL:
             try:
                 src_field = sys.argv[4]
@@ -501,7 +503,10 @@ if __name__ == "__main__":
             try:
                 dst_field = sys.argv[7]
             except:
-                dst_field = 'g1'                                  
+                dst_field = 'g1'                   
+        elif cmd == HF:
+            src_file = sys.argv[4]                       
+            dict_file = sys.argv[5]
     except:
         print "Processes ZBL stream (read from stdin) modifying every record according to given rule."
         print "Argument expected: command (what to do with records)."  
@@ -695,6 +700,68 @@ if __name__ == "__main__":
                                                          src_field_value_extractor=extract_bag_of_tfidf, \
                                                          dst_field_value_builder=zbl_io.pack_listpairs_field)    
             print num_enriched_records, "records enriched..."
+        elif cmd == HF:
+            print "HF"            
+            print "src_file =", src_file
+            print "dict_file =", dict_file              
+                        
+            #######################################################
+            print "Building Words-Docs model"
+            src_field = "g0"
+            print "src_field=", src_field
+            wordsmodel = build_wordsmodel(open(src_file), open("/tmp/null.txt", "w"), src_field)
+            wordsmodel.report()
+            
+            #######################################################
+            print "Mapping src_field into dst_field..."
+            localweigting = wf
+            globalweigting = ent                                
+            src_field = "g0"
+            dst_field = "g1"            
+            print "localweigting=",localweigting
+            print "globalweigting=",globalweigting
+            print "src_field=",src_field            
+            print "dst_field=",dst_field      
+            fout = open(src_file+".wfent", "w")
+            enriched = map_wordsmodel(open(src_file), fout, wordsmodel, src_field, dst_field, localweigting, globalweigting)
+            fout.close()
+            print enriched,"records enriched."
+            
+            #######################################################
+            print "BUILDING LSA MODEL..."
+            num_topics = 500
+            src_field = "g1"
+            dict_pickle = dict_file
+            topics_log_path = src_file+".LSA500-TOPICS"
+            print "num_topics =",num_topics
+            print "src_field =",src_field
+            print "dict_pickle =",dict_pickle        
+            print "topics_log_path =", topics_log_path
+    
+            print "Loading dictionary from file",dict_pickle
+            dictionary = pickle.load( open(dict_pickle) )
+            print "Building semantic model..."   
+            start = time.clock()
+            bag_of_ids_vals_generator = id_bags_generator(open(src_file+".wfent"), src_field, value_extractor=extract_bag_of_tfidf)
+            print "Building LSA-semantic model..."   
+            semantic_model = build_lsi_model(bag_of_ids_vals_generator, dictionary, num_topics)            
+            print "Storing topics into",topics_log_path 
+            gensim_topics_store(semantic_model, open(topics_log_path, "w"), topn=100)                          
+            print "Building semantic model=",semantic_model," in", time.clock()-start,"s"
+
+            ########################################################################
+            print "CALCULATING LSA..."
+            src_field = "g1"
+            dst_field = "g2"
+            print "src_field =",src_field
+            print "dst_field =",dst_field
+            print "Semantic model=",semantic_model
+            fout = open(src_file+".wfent.lsa500", "w")
+            num_enriched_records = gensim_mapfield_model(open(src_file+".wfent"), fout, semantic_model, src_field, dst_field, \
+                                                         src_field_value_extractor=extract_bag_of_tfidf, \
+                                                         dst_field_value_builder=zbl_io.pack_listpairs_field)    
+            print num_enriched_records, "records enriched..."
+            print "DONE."
             
         elif cmd == WD_MODEL:
             print "src_field=",src_field

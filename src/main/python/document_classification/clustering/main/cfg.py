@@ -21,7 +21,7 @@ import kmedoids
 
 #CODES PREFILTERING:
 MIN_COUNT_MSC = 0 #ile minimalnie dokumentow zeby zachowac klase
-MIN_COUNT_MSCPRIM = 1 #10
+MIN_COUNT_MSCPRIM = 10 #10
 MIN_COUNT_MSCSEC = 0
 
 #SAMPLING OF CODES REPRESENTATIONS:    
@@ -34,11 +34,11 @@ secondary_codes_weight = 0.0            #weight for secondary codes: default no 
 secondary_weight_method = 'e'
 similarity_aggregation_method_m = "a" 
 
-numiterations = 3
+numiterations = 1
 #m_clusters_range = [4,10,100,150,300,400]  
 #l_clusters_range = [4,10,100,150,300,400] 
-m_clusters_range = [2]#range(10,10000,10)
-l_clusters_range = [4]#range(10,10000,10)
+m_clusters_range = range(10,100,10)
+l_clusters_range = range(10,300,10)
 
 #SIMILARITY CACLULATIONS:    
 bonding_calc = lambda common_levels_fraction: common_levels_fraction
